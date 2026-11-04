@@ -44,6 +44,17 @@ README），然后在本目录执行 `git remote add origin <仓库地址>` + `g
 2. 把 `AGENT_PROMPT.md` 里的那段话发给那边的 Muse，它会自己解压、安装、验证并汇报；
 3. 也可以自己在终端按上面的三行命令手动跑。
 
+## TikTok 取片法也在包里（tiktok/ 目录）
+
+- `tiktok/TIKTOK_METHOD.md` — 固定取片法全文：浏览器开 SaveFrom 页
+  （zh.savefrom.net/105Ei/download-from-tiktok）粘链接下无水印 MP4、短链接
+  （vt.tiktok.com）的解析办法、广告弹窗避坑、取片后拆解流程。这一步必须走
+  真实浏览器（下载链接是网页在浏览器会话里现生成的），所以它是给 Muse/人
+  照着做的方法文档，不是命令行脚本。
+- `tiktok/prepare-reference.sh` — 下载之后的自动化：把下好的文件归档成标准
+  拆解工程（`~/workspace/hypit-projects/<项目名>/`），自动生成规格/切点候选/
+  音量报告和每 0.5 秒的帧网格证据图，拿来就能看帧拆解。
+
 ## 装完有什么
 
 | 组件 | 位置 | 说明 |

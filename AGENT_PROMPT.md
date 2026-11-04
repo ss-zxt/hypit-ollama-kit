@@ -12,3 +12,4 @@ Hypit + Ollama + qwen3:1.7b 这一套装好：
 装完之后 Hypit 的用法看它自带的 skill 说明；Ollama 接口是 http://127.0.0.1:11434，
 调 qwen3 时记得带 think:false。
 以后官方版本有更新时，先跑 ./upgrade.sh --check 看一眼，再跑 ./upgrade.sh 升级并把验证结果汇报给我，不要自己改版本号。
+另外：遇到 TikTok 参考链接时，按包里 tiktok/TIKTOK_METHOD.md 的固定方法取片（浏览器开 SaveFrom 页粘贴下载），下好后用 tiktok/prepare-reference.sh 归档出帧证据，再看完拆解，不要换其他下载路子。
