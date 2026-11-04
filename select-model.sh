@@ -18,7 +18,9 @@ set -Eeuo pipefail
 RAM_GB="${KIT_FAKE_RAM_GB:-}"
 if [ -z "$RAM_GB" ]; then
   MEM_KB="$(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 0)"
-  RAM_GB=$(( MEM_KB / 1024 / 1024 ))
+  # Round to the NEAREST GiB: a nominal "8 GB" server reports ~7.9 GiB of
+  # MemTotal, and flooring would wrongly drop it into the 1.7b tier.
+  RAM_GB=$(( (MEM_KB + 524288) / 1048576 ))
 fi
 
 VRAM_GB="${KIT_FAKE_VRAM_GB:-0}"

@@ -74,7 +74,7 @@ case "$(uname -m)" in
 esac
 # Detected-environment report (this is what --check-only exists for).
 OS_PRETTY="$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
-RAM_GB_DETECTED=$(( $(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 0) / 1024 / 1024 ))
+RAM_GB_DETECTED=$(( ( $(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 0) + 524288 ) / 1048576 ))
 info "OS: ${OS_PRETTY:-unknown Linux}, kernel $(uname -r)"
 info "RAM: ${RAM_GB_DETECTED} GB total; systemd: $([ -d /run/systemd/system ] && echo present || echo 'absent (nohup fallback will be used)')"
 for cmd in curl tar python3 node npm npx; do
