@@ -14,7 +14,11 @@
 #
 # Usage:
 #   ./install.sh [--skip-browsers] [--skip-model] [--skip-smoke]
-#                [--check-only] [--force] [--help]
+#                [--auto-model] [--check-only] [--force] [--help]
+# --auto-model: instead of the pinned OLLAMA_MODEL, pick the qwen3 size that
+# fits this machine (see select-model.sh). Same effect as OLLAMA_MODEL=auto
+# in versions.env. The resolved tag is recorded in the state dir so
+# verify.sh / upgrade.sh follow it.
 # Env overrides: HYPIT_VERSION, OLLAMA_VERSION, OLLAMA_MODEL (see versions.env).
 set -Eeuo pipefail
 
@@ -36,12 +40,13 @@ OLLAMA_BASE_URL="https://github.com/ollama/ollama/releases/download/v${OLLAMA_VE
 OLLAMA_ARCHIVE="ollama-linux-amd64.tar.zst"
 OLLAMA_HOST_URL="http://127.0.0.1:11434"
 
-SKIP_BROWSERS=0; SKIP_MODEL=0; SKIP_SMOKE=0; CHECK_ONLY=0; FORCE=0
+SKIP_BROWSERS=0; SKIP_MODEL=0; SKIP_SMOKE=0; CHECK_ONLY=0; FORCE=0; AUTO_MODEL=0
 for arg in "$@"; do
   case "$arg" in
     --skip-browsers) SKIP_BROWSERS=1 ;;
     --skip-model)    SKIP_MODEL=1 ;;
     --skip-smoke)    SKIP_SMOKE=1 ;;
+    --auto-model)    AUTO_MODEL=1 ;;
     --check-only)    CHECK_ONLY=1 ;;
     --force)         FORCE=1 ;;
     --help|-h)
@@ -67,9 +72,18 @@ case "$(uname -m)" in
   x86_64|amd64) info "architecture: x86_64" ;;
   *) die "Unsupported architecture $(uname -m): the pinned Ollama asset is linux-amd64." ;;
 esac
+# Detected-environment report (this is what --check-only exists for).
+OS_PRETTY="$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+RAM_GB_DETECTED=$(( $(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 0) / 1024 / 1024 ))
+info "OS: ${OS_PRETTY:-unknown Linux}, kernel $(uname -r)"
+info "RAM: ${RAM_GB_DETECTED} GB total; systemd: $([ -d /run/systemd/system ] && echo present || echo 'absent (nohup fallback will be used)')"
 for cmd in curl tar python3 node npm npx; do
   command -v "$cmd" >/dev/null 2>&1 || die "Missing required command: $cmd"
 done
+# Hypit 0.3.1 declares engines node >= 22.15.0 — enforce it up front instead of
+# failing mysteriously later.
+node -e 'const v=process.versions.node.split(".").map(Number); const ok=v[0]>22||(v[0]===22&&(v[1]>15||(v[1]===15&&v[2]>=0))); process.exit(ok?0:1)' \
+  || die "Node.js >= 22.15.0 is required by Hypit (found $(node --version)). Install a newer Node first."
 info "node $(node --version), npm $(npm --version), python3 present"
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
@@ -92,6 +106,14 @@ if [ "$CHECK_ONLY" -eq 1 ]; then
 fi
 
 mkdir -p "$BIN_DIR" "$HYPIT_PREFIX" "$OLLAMA_DIST" "$STATE_DIR"
+
+# ------------------------------------------------- model selection (optional)
+if [ "$AUTO_MODEL" -eq 1 ] || [ "$OLLAMA_MODEL" = "auto" ]; then
+  log "Model selection (auto, by machine specs)"
+  OLLAMA_MODEL="$(bash "$SCRIPT_DIR/select-model.sh")"
+  printf '%s\n' "$OLLAMA_MODEL" > "$STATE_DIR/resolved-model.txt"
+  info "selected $OLLAMA_MODEL for this machine (recorded in $STATE_DIR/resolved-model.txt)"
+fi
 
 # ---------------------------------------------------------------- Hypit skill
 log "Hypit skill"

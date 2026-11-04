@@ -1,7 +1,8 @@
 # 给目标 Muse 的一键安装指令（复制整段发给那边的 Muse）
 
 请使用我上传的 hypit-ollama-replication-kit.tar.gz，在你的环境里把
-Hypit + Ollama + qwen3:1.7b 这一套装好：
+Hypit + Ollama + qwen3:1.7b 这一套装好（你的环境需是 Linux x86_64、
+Node ≥ 22.15.0，不满足先把 install.sh --check-only 的环境报告发我）：
 
 1. 把压缩包解压到 ~/workspace 下，进入 hypit-ollama-replication-kit 目录；
 2. 运行 ./install.sh（完整安装，不要跳过浏览器和模型；大约要下 3.5 GB，耐心等它跑完）；

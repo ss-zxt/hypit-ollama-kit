@@ -66,7 +66,13 @@ if [ "$CHANGED" -eq 0 ]; then
   echo "== Pins already latest — refreshing the model tag only =="
   OLLAMA_BIN="$HOME/ollama/bin/ollama"
   [ -x "$OLLAMA_BIN" ] || die "ollama not installed yet; run ./install.sh first"
-  OLLAMA_HOST=127.0.0.1:11434 "$OLLAMA_BIN" pull "$OLLAMA_MODEL"
+  PULL_MODEL="$OLLAMA_MODEL"
+  if [ "$PULL_MODEL" = "auto" ]; then
+    RESOLVED_FILE="$HOME/.local/state/muse-hypit-ollama-kit/resolved-model.txt"
+    [ -f "$RESOLVED_FILE" ] && PULL_MODEL="$(head -1 "$RESOLVED_FILE")" \
+      || die "OLLAMA_MODEL=auto but no resolved model recorded; run install.sh --auto-model first"
+  fi
+  OLLAMA_HOST=127.0.0.1:11434 "$OLLAMA_BIN" pull "$PULL_MODEL"
   bash "$SCRIPT_DIR/verify.sh"
   echo "Done: model refreshed, versions unchanged."
   exit 0

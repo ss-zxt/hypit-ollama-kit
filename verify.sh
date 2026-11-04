@@ -10,6 +10,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HYPIT_VERSION="${HYPIT_VERSION:-0.3.1}"
 OLLAMA_VERSION="${OLLAMA_VERSION:-0.40.14}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-qwen3:1.7b}"
+# Auto-selected installs record the resolved tag; follow it when pinned as auto.
+if [ "$OLLAMA_MODEL" = "auto" ]; then
+  RESOLVED_FILE="$HOME/.local/state/muse-hypit-ollama-kit/resolved-model.txt"
+  if [ -f "$RESOLVED_FILE" ]; then
+    OLLAMA_MODEL="$(head -1 "$RESOLVED_FILE")"
+  else
+    echo "  [FAIL] OLLAMA_MODEL=auto but no resolved model recorded — run install.sh --auto-model first"
+    exit 1
+  fi
+fi
 API="http://127.0.0.1:11434"
 
 SMOKE=1
