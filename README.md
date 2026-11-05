@@ -8,6 +8,9 @@
 > 全流程场景、故障排查都在那一份里。本 README 只做快速上手。
 >
 > 🌐 English: [README_EN.md](README_EN.md) · [MANUAL_EN.md](MANUAL_EN.md)
+>
+> ⭐ **觉得有用？** 在 GitHub 上给这个仓库点个 Star，是对这个包最好的支持：
+> [github.com/ss-zxt/hypit-ollama-kit](https://github.com/ss-zxt/hypit-ollama-kit)
 
 ## 环境要求（摘要，完整版见使用手册 §3.1）
 
@@ -145,3 +148,9 @@ install.sh 改名保留；升级后验证不过，按脚本末尾打印的一行
   配置只保留 media + html 两个已验证端点，不受影响。
 - 本包只支持 **Linux x86_64**（在 Ubuntu 24.04 的 Muse VM 上验证）；Ollama 的
   锁定资产就是 linux-amd64 版。
+
+## 支持一下
+
+如果这个包帮你省了事，欢迎到 GitHub 给仓库点个 ⭐ Star：
+https://github.com/ss-zxt/hypit-ollama-kit —— 这是对维护者最直接的鼓励，
+也能帮更多人搜到它。

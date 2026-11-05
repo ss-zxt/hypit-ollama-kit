@@ -1,6 +1,10 @@
 # Hypit + Ollama + qwen3:1.7b — One-Click Replication Kit
 
 > 中文版：[README.md](README.md)
+>
+> ⭐ **Found it useful?** Please star the repo on GitHub — it is the best
+> way to support this kit:
+> [github.com/ss-zxt/hypit-ollama-kit](https://github.com/ss-zxt/hypit-ollama-kit)
 
 Take the environment verified on one Muse account and reproduce it, as-is,
 on another: **Hypit (skill + CLI + two headless browsers) + open-source
@@ -184,3 +188,9 @@ nothing else changed; changing the model *size* (e.g. to 4b) is an
   html) and is unaffected.
 - The kit supports **Linux x86_64 only** (verified on a Ubuntu 24.04 Muse
   VM); the pinned Ollama asset is the linux-amd64 build.
+
+## Support
+
+If this kit saved you time, please give it a ⭐ star on GitHub:
+https://github.com/ss-zxt/hypit-ollama-kit — it is the most direct way to
+encourage the maintainer, and it helps others find the kit.
