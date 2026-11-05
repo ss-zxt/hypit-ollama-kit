@@ -6,6 +6,8 @@
 
 > **完整文档看 [使用手册.md](使用手册.md)**：功能介绍、每个脚本的参数、
 > 全流程场景、故障排查都在那一份里。本 README 只做快速上手。
+>
+> 🌐 English: [README_EN.md](README_EN.md) · [MANUAL_EN.md](MANUAL_EN.md)
 
 ## 环境要求（摘要，完整版见使用手册 §3.1）
 
