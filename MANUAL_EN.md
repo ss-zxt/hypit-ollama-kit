@@ -145,7 +145,7 @@ tar -xzf hypit-ollama-replication-kit.tar.gz
 cd hypit-ollama-replication-kit && ./install.sh
 
 # B. Git clone (after publishing to GitHub)
-git clone https://github.com/<you>/hypit-ollama-kit.git
+git clone https://github.com/ss-zxt/hypit-ollama-kit.git
 cd hypit-ollama-kit && ./install.sh
 
 # C. Hand it to the target account's Muse: paste AGENT_PROMPT.md to it

@@ -44,11 +44,11 @@ others can install it two ways:
 
 ```bash
 # Option 1: clone and install (recommended — upgrade.sh then upgrades in place)
-git clone https://github.com/<you>/hypit-ollama-kit.git
+git clone https://github.com/ss-zxt/hypit-ollama-kit.git
 cd hypit-ollama-kit && ./install.sh
 
-# Option 2: one-liner (replace <you> with the repo owner)
-curl -fsSL https://raw.githubusercontent.com/<you>/hypit-ollama-kit/main/bootstrap.sh | KIT_REPO=<you>/hypit-ollama-kit bash
+# Option 2: one-liner
+curl -fsSL https://raw.githubusercontent.com/ss-zxt/hypit-ollama-kit/main/bootstrap.sh | KIT_REPO=ss-zxt/hypit-ollama-kit bash
 ```
 
 To publish: create an empty GitHub repository (e.g. `hypit-ollama-kit`,

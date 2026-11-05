@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # bootstrap.sh — fetch this kit from GitHub and run install.sh.
 #
-#   curl -fsSL https://raw.githubusercontent.com/<you>/hypit-ollama-kit/main/bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/ss-zxt/hypit-ollama-kit/main/bootstrap.sh | bash
 #
 # Or set the repo explicitly:
-#   KIT_REPO=<you>/hypit-ollama-kit KIT_REF=main bash bootstrap.sh [--skip-smoke ...]
+#   KIT_REPO=ss-zxt/hypit-ollama-kit KIT_REF=main bash bootstrap.sh [--skip-smoke ...]
 #
 # Any extra arguments are passed through to install.sh. The kit sources are
 # unpacked into a temp dir; for upgrades later, prefer `git clone` so

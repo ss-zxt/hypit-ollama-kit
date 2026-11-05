@@ -35,11 +35,11 @@ cd hypit-ollama-replication-kit
 
 ```bash
 # 方式一：克隆安装（推荐——之后 upgrade.sh 能直接在仓库目录里升级）
-git clone https://github.com/<you>/hypit-ollama-kit.git
+git clone https://github.com/ss-zxt/hypit-ollama-kit.git
 cd hypit-ollama-kit && ./install.sh
 
-# 方式二：一行流（把 <you> 换成仓库主）
-curl -fsSL https://raw.githubusercontent.com/<you>/hypit-ollama-kit/main/bootstrap.sh | KIT_REPO=<you>/hypit-ollama-kit bash
+# 方式二：一行流
+curl -fsSL https://raw.githubusercontent.com/ss-zxt/hypit-ollama-kit/main/bootstrap.sh | KIT_REPO=ss-zxt/hypit-ollama-kit bash
 ```
 
 发布步骤：GitHub 上新建一个空仓库（如 `hypit-ollama-kit`，不要勾选初始化
