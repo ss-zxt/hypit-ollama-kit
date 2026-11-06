@@ -8,13 +8,15 @@
 #   4. Ollama (pinned)        -> ~/ollama                      (official GitHub release tar.zst, sha256-verified)
 #   5. Ollama systemd service -> /etc/systemd/system/ollama.service (proxy env baked in; re-run after VM restart)
 #   6. Model qwen3:1.7b       -> ~/.ollama/models              (ollama pull)
+#   7. TikTok capture tool    -> ~/workspace/tools/omniget     (omniget-cli + pinned yt-dlp,
+#                                                              via tiktok/install-omniget.sh)
 #
 # Idempotent: re-running skips whatever is already in place and only restores
 # what is missing (e.g. the systemd unit after a VM replacement).
 #
 # Usage:
 #   ./install.sh [--skip-browsers] [--skip-model] [--skip-smoke]
-#                [--auto-model] [--check-only] [--force] [--help]
+#                [--skip-omniget] [--auto-model] [--check-only] [--force] [--help]
 # --auto-model: instead of the pinned OLLAMA_MODEL, pick the qwen3 size that
 # fits this machine (see select-model.sh). Same effect as OLLAMA_MODEL=auto
 # in versions.env. The resolved tag is recorded in the state dir so
@@ -29,6 +31,8 @@ HYPIT_VERSION="${HYPIT_VERSION:-0.3.1}"
 OLLAMA_VERSION="${OLLAMA_VERSION:-0.40.14}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-qwen3:1.7b}"
 OLLAMA_ARCHIVE_SHA256="${OLLAMA_ARCHIVE_SHA256:-}"
+OMNIGET_VERSION="${OMNIGET_VERSION:-0.14.0}"
+YTDLP_VERSION="${YTDLP_VERSION:-2026.10.26}"
 
 SKILL_DIR="$HOME/.agents/skills/hypit"
 HYPIT_PREFIX="$HOME/.local/share/hypit-cli"
@@ -40,12 +44,13 @@ OLLAMA_BASE_URL="https://github.com/ollama/ollama/releases/download/v${OLLAMA_VE
 OLLAMA_ARCHIVE="ollama-linux-amd64.tar.zst"
 OLLAMA_HOST_URL="http://127.0.0.1:11434"
 
-SKIP_BROWSERS=0; SKIP_MODEL=0; SKIP_SMOKE=0; CHECK_ONLY=0; FORCE=0; AUTO_MODEL=0
+SKIP_BROWSERS=0; SKIP_MODEL=0; SKIP_SMOKE=0; SKIP_OMNIGET=0; CHECK_ONLY=0; FORCE=0; AUTO_MODEL=0
 for arg in "$@"; do
   case "$arg" in
     --skip-browsers) SKIP_BROWSERS=1 ;;
     --skip-model)    SKIP_MODEL=1 ;;
     --skip-smoke)    SKIP_SMOKE=1 ;;
+    --skip-omniget)  SKIP_OMNIGET=1 ;;
     --auto-model)    AUTO_MODEL=1 ;;
     --check-only)    CHECK_ONLY=1 ;;
     --force)         FORCE=1 ;;
@@ -239,6 +244,24 @@ else
   info "skipping model pull (--skip-model)"
 fi
 
+# ---------------------------------------------------------------- TikTok capture tool (omniget-cli)
+log "TikTok capture tool (omniget-cli $OMNIGET_VERSION + yt-dlp $YTDLP_VERSION)"
+if [ "$SKIP_OMNIGET" -eq 0 ]; then
+  if [ -f "$SCRIPT_DIR/tiktok/install-omniget.sh" ]; then
+    OMNIGET_ARGS=()
+    [ "$FORCE" -eq 1 ] && OMNIGET_ARGS=(--force)
+    if bash "$SCRIPT_DIR/tiktok/install-omniget.sh" "${OMNIGET_ARGS[@]}"; then
+      info "omniget-cli ready (TikTok capture: bash tiktok/download-tiktok.sh \"<URL>\")"
+    else
+      warn "omniget-cli install failed — the rest of the stack is unaffected; retry later with: bash tiktok/install-omniget.sh"
+    fi
+  else
+    warn "tiktok/install-omniget.sh not found in this kit copy — skipping the capture tool"
+  fi
+else
+  info "skipping omniget-cli (--skip-omniget)"
+fi
+
 # ---------------------------------------------------------------- Manifest + verify
 cat > "$STATE_DIR/install-manifest.json" <<EOF
 {
@@ -250,6 +273,8 @@ cat > "$STATE_DIR/install-manifest.json" <<EOF
   "ollama_binary": "$OLLAMA_BIN",
   "ollama_api": "$OLLAMA_HOST_URL",
   "model": "$OLLAMA_MODEL",
+  "omniget_version": "$OMNIGET_VERSION",
+  "ytdlp_version": "$YTDLP_VERSION",
   "sources": {
     "hypit_repo": "https://github.com/hypit-ai/hypit",
     "hypit_npm": "https://registry.npmjs.org/@hypit/hypit/-/@hypit/hypit-${HYPIT_VERSION}.tgz",

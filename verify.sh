@@ -68,6 +68,22 @@ else
   bad "model $OLLAMA_MODEL not in /api/tags (try: ollama pull $OLLAMA_MODEL)"
 fi
 
+OMNIGET_VERSION="${OMNIGET_VERSION:-0.14.0}"
+YTDLP_VERSION="${YTDLP_VERSION:-2026.10.26}"
+OMNIGET_CLI="$HOME/workspace/tools/omniget/omniget-cli"
+if [ -x "$OMNIGET_CLI" ] && "$OMNIGET_CLI" --help >/dev/null 2>&1; then
+  ok "omniget-cli present (TikTok capture, release $OMNIGET_VERSION)"
+else
+  note "omniget-cli not found (run: bash tiktok/install-omniget.sh)"
+fi
+YTDLP_BIN="$HOME/.local/share/com.openselena.omniget/bin/yt-dlp"
+if [ -x "$YTDLP_BIN" ]; then
+  V="$("$YTDLP_BIN" --version 2>/dev/null || true)"
+  [ "$V" = "$YTDLP_VERSION" ] && ok "yt-dlp $V (omniget engine)" || note "yt-dlp present (version '${V:-unknown}', expected $YTDLP_VERSION)"
+else
+  note "yt-dlp engine not found (run: bash tiktok/install-omniget.sh)"
+fi
+
 if [ "$SMOKE" -eq 1 ] && [ "$FAIL" -eq 0 ]; then
   RESP="$(curl -fsS --max-time 120 -X POST "$API/api/generate" -d "{\"model\":\"$OLLAMA_MODEL\",\"prompt\":\"请用中文一句话介绍你自己。\",\"stream\":false,\"think\":false,\"options\":{\"num_predict\":64}}" 2>/dev/null || true)"
   if [ -n "$RESP" ]; then

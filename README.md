@@ -87,6 +87,8 @@ README），然后在本目录执行 `git remote add origin <仓库地址>` + `g
 | Ollama 0.40.14 | `~/ollama`，软链 `~/.local/bin/ollama` | 官方 release 包，校验过 SHA-256 |
 | Ollama 服务 | systemd `ollama.service`，API `http://127.0.0.1:11434` | 当前环境的代理变量已写进服务单元（服务进程拉模型要用） |
 | qwen3:1.7b | `~/.ollama/models` | 官方模型库拉取，约 1.4 GB |
+| omniget-cli 0.14.0 | `~/workspace/tools/omniget/omniget-cli` | TikTok 取片工具（OpenSelena/omniget 命令行版），官方 release 包，校验过 SHA-256；`--skip-omniget` 可跳过，之后可单独跑 `bash tiktok/install-omniget.sh` 补装 |
+| yt-dlp 2026.10.26 | `~/.local/share/com.openselena.omniget/bin/yt-dlp` | omniget 的下载引擎（官方 zipapp，校验过 SHA-256）；手动放置版，升级/重装时勿删 |
 
 使用前把软链目录加进 PATH（Muse 的终端通常已包含）：
 
@@ -104,6 +106,7 @@ ollama list              # 应能看到 qwen3:1.7b
 ./install.sh --skip-browsers  # 跳过两套浏览器下载
 ./install.sh --skip-model     # 跳过拉模型
 ./install.sh --skip-smoke     # 跳过最后的推理冒烟测试
+./install.sh --skip-omniget   # 跳过 TikTok 取片工具（omniget-cli + yt-dlp）
 ./install.sh --force          # 强制重装已存在的组件
 bash verify.sh                # 随时单独复验（--no-smoke 跳过推理）
 bash setup-ollama-service.sh  # VM 重启后单独恢复 Ollama 服务

@@ -164,6 +164,7 @@ cd hypit-ollama-kit && ./install.sh
 | `--skip-browsers` | Skip both browser downloads (saves ~0.6 GB; can be added later) |
 | `--skip-model` | Skip pulling qwen3:1.7b (saves ~1.4 GB) |
 | `--skip-smoke` | Skip the final inference smoke test (other checks still run) |
+| `--skip-omniget` | Skip the TikTok capture tool (omniget-cli + yt-dlp, ~9 MB; add later with `bash tiktok/install-omniget.sh`). A failed capture-tool install only warns and never aborts the main install |
 | `--auto-model` | Instead of the pinned 1.7b, pick a qwen3 size by this machine's RAM/VRAM (see §4.1) |
 | `--force` | Force-reinstall components that are already present (upgrades, repairs) |
 
@@ -254,7 +255,7 @@ back, restore the fixed tag and re-run `./install.sh`.
 ### 6.1 Verify
 
 ```bash
-bash verify.sh              # all 9 checks + one Chinese inference test
+bash verify.sh              # all 11 checks + one Chinese inference test
 bash verify.sh --no-smoke   # quick version without the inference test
 ```
 

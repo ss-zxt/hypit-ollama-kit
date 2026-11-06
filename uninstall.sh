@@ -28,7 +28,8 @@ rm -rf "$HOME/.agents/skills/hypit"
 rm -rf "$HOME/ollama"
 rm -rf "$HOME/.cache/puppeteer" "$HOME/.cache/hypit"
 rm -rf "$HOME/.local/state/muse-hypit-ollama-kit"
-echo "removed hypit skill/CLI/browsers and ~/ollama binaries"
+rm -rf "$HOME/workspace/tools/omniget" "$HOME/.local/share/com.openselena.omniget"
+echo "removed hypit skill/CLI/browsers, ~/ollama binaries and the omniget capture tool (downloads under ~/workspace/downloads were kept)"
 
 if [ "$PURGE" -eq 1 ]; then
   rm -rf "$HOME/.ollama"

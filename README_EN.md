@@ -110,6 +110,8 @@ restores the service.
 | Ollama 0.40.14 | `~/ollama`, symlink `~/.local/bin/ollama` | Official release package, SHA-256 verified |
 | Ollama service | systemd `ollama.service`, API `http://127.0.0.1:11434` | The current environment's proxy variables are baked into the unit (the service process needs them to pull models) |
 | qwen3:1.7b | `~/.ollama/models` | Pulled from the official model library, ~1.4 GB |
+| omniget-cli 0.14.0 | `~/workspace/tools/omniget/omniget-cli` | TikTok capture tool (the CLI build of OpenSelena/omniget), official release package, SHA-256 verified; skip with `--skip-omniget`, add later via `bash tiktok/install-omniget.sh` |
+| yt-dlp 2026.10.26 | `~/.local/share/com.openselena.omniget/bin/yt-dlp` | omniget's download engine (official zipapp, SHA-256 verified); hand-placed copy — do not delete it on upgrades/reinstalls |
 
 Put the symlink directory on your PATH first (Muse terminals usually
 include it already):
@@ -128,6 +130,7 @@ ollama list              # should show qwen3:1.7b
 ./install.sh --skip-browsers  # skip both browser downloads
 ./install.sh --skip-model     # skip pulling the model
 ./install.sh --skip-smoke     # skip the final inference smoke test
+./install.sh --skip-omniget   # skip the TikTok capture tool (omniget-cli + yt-dlp)
 ./install.sh --force          # force-reinstall existing components
 bash verify.sh                # re-verify any time (--no-smoke skips inference)
 bash setup-ollama-service.sh  # restore the Ollama service alone after a VM restart
