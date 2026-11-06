@@ -21,7 +21,7 @@ machine**:
 | Template decomposition & prompt drafting | Hypit skill + CLI 0.3.1 | Break a reference video down into structure (shots / actions / cut points), batch-swap words and images, produce generation prompts |
 | Local small model | Ollama 0.40.14 + Qwen qwen3:1.7b | Run a local model offline to assist decomposition, rewriting and classification — no cloud tokens spent |
 | Headless browsers ×2 | Chrome for Testing 153 + Headless Shell 152 | Hypit's web capture and its production rendering pipeline |
-| TikTok capture method | tiktok/ directory | A fixed SaveFrom-based way to fetch reference clips, plus automatic post-download archiving and frame evidence |
+| TikTok capture method | tiktok/ directory | A fixed omniget-cli (command-line) way to fetch reference clips, plus automatic post-download archiving and frame evidence |
 
 Design principles (all learned the hard way):
 
@@ -48,7 +48,9 @@ extract_zst.py              Python fallback unpacker when zstd is absent (called
 select-model.sh             Pick a qwen3 size by RAM/VRAM (used by --auto-model)
 versions.env                The single version-pin file (upgrades touch only this)
 smoke-project/              Minimal Hypit project (drives the renderer prepare step, see §7 #1)
-tiktok/TIKTOK_METHOD.md     The full TikTok capture method (browser steps)
+tiktok/TIKTOK_METHOD.md     The full TikTok capture method (omniget-cli command-line steps, Chinese)
+tiktok/install-omniget.sh   One-time installer for the capture tool (omniget-cli + yt-dlp, SHA-256 verified)
+tiktok/download-tiktok.sh   Download one TikTok link with a single command (proxy rule built in)
 tiktok/prepare-reference.sh Post-download archiving + frame-evidence script
 README.md                   Quick start (Chinese)
 README_EN.md                Quick start (English)
@@ -71,6 +73,8 @@ Machine layout after installation:
 ~/ollama-dist                     Ollama package cache (verified; keep for offline reinstall)
 /etc/systemd/system/ollama.service  Service (proxy vars baked in, API 127.0.0.1:11434)
 ~/.local/state/muse-hypit-ollama-kit/  State, incl. install-manifest.json
+~/workspace/tools/omniget/omniget-cli   TikTok capture tool (installed by tiktok/install-omniget.sh)
+~/.local/share/com.openselena.omniget/bin/yt-dlp  Capture engine (hand-placed copy, do not delete)
 ```
 
 ## 3. Installation
@@ -226,11 +230,16 @@ back, restore the fixed tag and re-run `./install.sh`.
 
 ## 5. The TikTok reference workflow, end to end
 
-1. Fetch the clip in a browser, following `tiktok/TIKTOK_METHOD.md` — open
-   the SaveFrom page (zh.savefrom.net/105Ei/download-from-tiktok), paste the
-   link, download the no-watermark MP4. If a short link (vt.tiktok.com)
-   fails to parse, open it first to get the canonical long URL, then paste
-   that. Always close ad popups; never install extensions or log in.
+1. Fetch the clip from the command line, following
+   `tiktok/TIKTOK_METHOD.md` — run `bash tiktok/install-omniget.sh` once
+   to install omniget-cli (the CLI of OpenSelena/omniget), then
+   `bash tiktok/download-tiktok.sh "<TikTok URL>"` downloads in one
+   command (info first for title/author/duration, then the download and
+   an ffprobe check). On Muse VMs the environment proxy is mandatory
+   (the script applies `$HTTPS_PROXY` for you; without it every fetch
+   fails with a misleading "extractor broken" error). Short links
+   (vt.tiktok.com) resolve directly. Only if omniget fails twice, fall
+   back to the SaveFrom browser method kept at the end of that document.
 2. Archive and extract evidence:
    `bash tiktok/prepare-reference.sh <downloaded file> <english-project-name>`
    → creates, under `~/workspace/hypit-projects/<project-name>/`:

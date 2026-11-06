@@ -66,11 +66,12 @@ README），然后在本目录执行 `git remote add origin <仓库地址>` + `g
 
 ## TikTok 取片法也在包里（tiktok/ 目录）
 
-- `tiktok/TIKTOK_METHOD.md` — 固定取片法全文：浏览器开 SaveFrom 页
-  （zh.savefrom.net/105Ei/download-from-tiktok）粘链接下无水印 MP4、短链接
-  （vt.tiktok.com）的解析办法、广告弹窗避坑、取片后拆解流程。这一步必须走
-  真实浏览器（下载链接是网页在浏览器会话里现生成的），所以它是给 Muse/人
-  照着做的方法文档，不是命令行脚本。
+- `tiktok/TIKTOK_METHOD.md` — 固定取片法全文：用 **omniget-cli**
+  （开源项目 OpenSelena/omniget 的命令行版）下载 TikTok 参考片——短链接
+  （vt.tiktok.com）可直接解析、Muse VM 上必须带代理的铁律、失败重试与
+  兜底办法、取片后拆解流程。配套两个脚本：`tiktok/install-omniget.sh`
+  （一次性安装工具，版本锁定 + SHA-256 校验）和
+  `tiktok/download-tiktok.sh "<链接>"`（一条命令下好并验可播）。
 - `tiktok/prepare-reference.sh` — 下载之后的自动化：把下好的文件归档成标准
   拆解工程（`~/workspace/hypit-projects/<项目名>/`），自动生成规格/切点候选/
   音量报告和每 0.5 秒的帧网格证据图，拿来就能看帧拆解。

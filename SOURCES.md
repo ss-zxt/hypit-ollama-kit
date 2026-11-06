@@ -30,6 +30,21 @@
 - 本地清单摘要（manifest digest）：`sha256:8f68893c685c3ddff2aa3fffce2aa60a30bb2da65ca488b61fff134a4d1730e7`
 - 模型层：`sha256:3d0b790534fe4b79525fc3692950408dca41171676ed7e21db57af5c65ef6ab6`（1,359,279,776 字节）
 
+## TikTok 取片工具 omniget-cli + yt-dlp（2026-11-06 加入，tiktok/ 目录用）
+
+- omniget-cli（开源，OpenSelena/omniget，GPL-3.0）：
+  - 仓库：https://github.com/OpenSelena/omniget
+  - 锁定版本：v0.14.0，资产 `omniget-cli-0.14.0-x86_64-unknown-linux-gnu.tar.gz`（5,916,273 字节）
+  - 下载：https://github.com/OpenSelena/omniget/releases/download/v0.14.0/omniget-cli-0.14.0-x86_64-unknown-linux-gnu.tar.gz
+  - SHA-256：`ec29439b1928c0871592f5c10b758349dad01a5411950e00e46313f6617d0de4`
+    （2026-11-05 本地下载文件实测比对；install-omniget.sh 每次安装都会重新校验）
+  - 备注：二进制 `--version` 自报 0.1.0，是上游内部版本号没跟上，不影响使用。
+- yt-dlp（omniget 的下载引擎，开源，yt-dlp/yt-dlp）：
+  - 锁定版本：2026.10.26，资产 `yt-dlp`（zipapp，3,073,072 字节）
+  - 下载：https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp
+  - SHA-256：`e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3`
+    （与该 release 官方 SHA2-256SUMS 中 `yt-dlp` 一行一致）
+
 ## 依赖
 
 - ffmpeg（Hypit 必需）：目标机自带（本机 8.1.2）；缺失时 install.sh 尝试用 apt 安装。

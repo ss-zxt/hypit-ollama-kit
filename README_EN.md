@@ -85,13 +85,14 @@ restores the service.
 
 ## The TikTok capture method is in the kit too (tiktok/ directory)
 
-- `tiktok/TIKTOK_METHOD.md` — the fixed capture method in full: open the
-  SaveFrom page (zh.savefrom.net/105Ei/download-from-tiktok) in a browser,
-  paste the link, download the no-watermark MP4; how to resolve short links
-  (vt.tiktok.com); ad-popup pitfalls; and the post-download decomposition
-  flow. This step must go through a real browser (download links are
-  generated inside a browser session by the page), so it is a method
-  document for a Muse or a human to follow, not a command-line script.
+- `tiktok/TIKTOK_METHOD.md` — the fixed capture method in full (Chinese):
+  download TikTok reference clips with **omniget-cli** (the command-line
+  build of the open-source OpenSelena/omniget project) — short links
+  (vt.tiktok.com) resolve directly, the proxy rule that is mandatory on
+  Muse VMs, retry/fallback rules, and the post-download decomposition
+  flow. Two companion scripts: `tiktok/install-omniget.sh` (one-time tool
+  install, version-pinned and SHA-256 verified) and
+  `tiktok/download-tiktok.sh "<url>"` (one command to download + verify).
 - `tiktok/prepare-reference.sh` — the automation after downloading: archives
   the file into a standard decomposition project
   (`~/workspace/hypit-projects/<project-name>/`) and automatically produces

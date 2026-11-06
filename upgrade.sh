@@ -99,6 +99,10 @@ NEW_HYPIT_INTEGRITY="$(npm view "@hypit/hypit@$LATEST_HYPIT" dist.integrity 2>/d
   printf 'OLLAMA_MODEL=%s\n' "$OLLAMA_MODEL"
   printf 'OLLAMA_ARCHIVE_SHA256=%s\n' "$NEW_OLLAMA_SHA"
   printf 'HYPIT_NPM_INTEGRITY=%s\n' "$NEW_HYPIT_INTEGRITY"
+  printf 'OMNIGET_VERSION=%s\n' "${OMNIGET_VERSION:-0.14.0}"
+  printf 'OMNIGET_CLI_SHA256=%s\n' "${OMNIGET_CLI_SHA256:-ec29439b1928c0871592f5c10b758349dad01a5411950e00e46313f6617d0de4}"
+  printf 'YTDLP_VERSION=%s\n' "${YTDLP_VERSION:-2026.10.26}"
+  printf 'YTDLP_SHA256=%s\n' "${YTDLP_SHA256:-e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3}"
 } > "$SCRIPT_DIR/versions.env"
 info "versions.env now pins hypit $LATEST_HYPIT / ollama $LATEST_OLLAMA"
 

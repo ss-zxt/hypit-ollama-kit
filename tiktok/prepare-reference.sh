@@ -10,8 +10,9 @@
 #   references/PROBE.txt    specs + visual-change candidates + audio levels
 #   evidence/tiles/         0.5s time-labeled frame grids (hypit media tiles)
 #
-# The download itself is a browser step (see TIKTOK_METHOD.md); this script
-# covers everything after the file lands on disk.
+# The download itself is one CLI step (download-tiktok.sh / omniget-cli,
+# see TIKTOK_METHOD.md); this script covers everything after the file
+# lands on disk.
 set -Eeuo pipefail
 
 SRC="${1:-}"
