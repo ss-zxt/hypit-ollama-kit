@@ -262,7 +262,39 @@ bash verify.sh --no-smoke   # quick version without the inference test
 Every [FAIL] line ends with its fix command (e.g. service down → run the
 setup script).
 
-### 6.2 Upgrade (when official releases move)
+### 6.2 Update the kit itself (when the repo publishes a new version)
+
+Keep this separate from §6.3: this updates **a new version of this kit**
+(its scripts, docs and components — e.g. the 2026-11-06 switch of the
+TikTok capture method to omniget-cli), not the official Hypit/Ollama
+version numbers. Pick by how the machine was installed:
+
+```bash
+# Route 1: installed via git clone (recommended)
+cd hypit-ollama-kit
+git pull --ff-only
+./install.sh        # idempotent: skips what is in place, adds only what is new
+bash verify.sh      # ALL CHECKS PASSED means the update is complete
+
+# Route 2: installed from an archive
+# Download the new tar.gz/zip, unpack it over the old kit directory
+# (or into a fresh one), then inside the kit directory:
+./install.sh
+bash verify.sh
+```
+
+Notes:
+
+- install.sh is idempotent — an update never reinstalls components that
+  are already in place and never touches pulled models, so re-run it
+  without worry.
+- Machines installed via the one-line bootstrap have no persistent kit
+  checkout; switch to a `git clone` install if you want updates this way.
+- If a new version changes the pins in versions.env (new components /
+  new versions), re-running install.sh fills in everything to the new
+  pins, and verify.sh's checks line up with them.
+
+### 6.3 Upgrade (when official releases move)
 
 ```bash
 ./upgrade.sh --check   # compare only: current pins vs official latest (live from npm + GitHub)
@@ -278,7 +310,7 @@ setup script).
 - The Qwen tag floats: even with no new version, `./upgrade.sh` re-pulls to
   refresh the model digest.
 
-### 6.3 VM replaced / rebooted and the Ollama service is gone
+### 6.4 VM replaced / rebooted and the Ollama service is gone
 
 Everything under home is still there; only the unit in /etc is missing:
 
@@ -287,7 +319,7 @@ bash setup-ollama-service.sh   # rebuild the service from the current environmen
 # or simply re-run ./install.sh (idempotent; it fills in whatever is missing)
 ```
 
-### 6.4 Uninstall
+### 6.5 Uninstall
 
 ```bash
 ./uninstall.sh --yes            # removes service/skill/CLI/browsers/Ollama, keeps models
@@ -304,7 +336,7 @@ manually if you want it gone.
 | `hypit programs prepare` says "No Hypit project was found" | The command only runs inside a project with a selected Runtime. install.sh runs it for you through the bundled `smoke-project/`; to do it manually, cd into any Hypit project, or copy smoke-project into the state dir the way install.sh does, then `hypit runtime use ./hypit.runtime.json && hypit programs prepare` |
 | The opencv endpoint in a fresh `runtime init` config fails (uv missing) | The default new config includes an image.opencv endpoint that needs `uv`. The kit's smoke-project uses the verified media+html two-endpoint config and is unaffected; opencv is only an image-processing endpoint and is not needed for decomposition/rendering |
 | `hypit capture screenshot` fails as root | That command launches Chrome without `--no-sandbox`; the production render pipeline passes it itself, so only the standalone screenshot command is limited |
-| Ollama API unreachable, model pulls fail | Start with `systemctl status ollama`; usually the service vanished in a VM replacement → §6.3. Another common cause: the service process has no proxy (having one in your shell is not enough) → the setup script writes the current environment's proxy variables into the unit; re-run it after an environment change. **One more, field-tested 2026-11-05: `ollama pull` hangs ~60 s at "pulling manifest" and fails with `context deadline exceeded`, while curl to the model registry from your shell is instant** — the proxy address baked into the service unit has gone stale (the machine's egress proxy rotated). Re-running `setup-ollama-service.sh` to rebuild the service from the current environment fixes it; no reinstall needed |
+| Ollama API unreachable, model pulls fail | Start with `systemctl status ollama`; usually the service vanished in a VM replacement → §6.4. Another common cause: the service process has no proxy (having one in your shell is not enough) → the setup script writes the current environment's proxy variables into the unit; re-run it after an environment change. **One more, field-tested 2026-11-05: `ollama pull` hangs ~60 s at "pulling manifest" and fails with `context deadline exceeded`, while curl to the model registry from your shell is instant** — the proxy address baked into the service unit has gone stale (the machine's egress proxy rotated). Re-running `setup-ollama-service.sh` to rebuild the service from the current environment fixes it; no reinstall needed |
 | qwen3 answers empty / takes forever | Thinking mode is on: add `"think": false` to the request (see §4) |
 | Unpacking the Ollama package fails | The fallback chain is tar --zstd → the zstd binary → the Python zstandard module (extract_zst.py); if all three are missing the script tries to pip-install zstandard. On a checksum failure, delete the package in `~/ollama-dist` and re-download |
 | `hypit media tiles` says "no video frame exists at or after Ns" | The sampling end hit the exact total duration; set --end to the duration −0.1s (prepare-reference.sh has this built in) |

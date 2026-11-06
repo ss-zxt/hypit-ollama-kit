@@ -47,7 +47,7 @@ This folder is itself a complete git repository. Once published to GitHub,
 others can install it two ways:
 
 ```bash
-# Option 1: clone and install (recommended — upgrade.sh then upgrades in place)
+# Option 1: clone and install (recommended — later kit versions then update via git pull, see Manual §6.2)
 git clone https://github.com/ss-zxt/hypit-ollama-kit.git
 cd hypit-ollama-kit && ./install.sh
 
@@ -139,6 +139,22 @@ bash setup-ollama-service.sh  # restore the Ollama service alone after a VM rest
 
 All versions are pinned in `versions.env` — upgrading means editing that
 one file; sources and checksums are in `SOURCES.md`.
+
+## What if this kit itself publishes a new version?
+
+This updates the kit's own scripts/docs/components (a different thing
+from upgrading the official versions below). If you installed with
+`git clone`, three lines in the kit directory do it:
+
+```bash
+git pull --ff-only
+./install.sh     # idempotent: skips what is in place, adds only what is new, never touches pulled models
+bash verify.sh   # ALL CHECKS PASSED means the update is complete
+```
+
+If you installed from an archive: download the new archive, unpack it
+over the old kit directory, then run the same `./install.sh` +
+`bash verify.sh`. Full details in Manual §6.2.
 
 ## What if the official versions move on?
 

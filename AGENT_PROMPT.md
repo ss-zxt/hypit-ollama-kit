@@ -12,5 +12,5 @@ Node ≥ 22.15.0，不满足先把 install.sh --check-only 的环境报告发我
 注意：代理设置从你当前环境自动继承，不要把代理地址、令牌或任何密钥写进给我的汇报里。
 装完之后 Hypit 的用法看它自带的 skill 说明；Ollama 接口是 http://127.0.0.1:11434，
 调 qwen3 时记得带 think:false。
-以后官方版本有更新时，先跑 ./upgrade.sh --check 看一眼，再跑 ./upgrade.sh 升级并把验证结果汇报给我，不要自己改版本号。
+以后官方版本有更新时，先跑 ./upgrade.sh --check 看一眼，再跑 ./upgrade.sh 升级并把验证结果汇报给我，不要自己改版本号。如果是这个包本身发了新版（脚本/文档/组件更新），那是另一回事：git clone 装的就在包目录 git pull --ff-only 后重跑 ./install.sh 并跑 bash verify.sh 把结果汇报给我；压缩包装的就换新版压缩包覆盖后同样重跑（详见使用手册 §6.2）。
 另外：遇到 TikTok 参考链接时，按包里 tiktok/TIKTOK_METHOD.md 的固定方法取片：取片工具 omniget-cli 已随 ./install.sh 一起装好（万一缺失，先跑一次 bash tiktok/install-omniget.sh 补装），再用 bash tiktok/download-tiktok.sh "<链接>" 下载（Muse VM 上必须带代理，脚本已处理好），下好后用 tiktok/prepare-reference.sh 归档出帧证据，再看完拆解，不要换其他下载路子。

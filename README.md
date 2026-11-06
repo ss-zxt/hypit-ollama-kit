@@ -37,7 +37,7 @@ cd hypit-ollama-replication-kit
 这个文件夹本身就是一个完整的 git 仓库结构。发布到 GitHub 后，别人有两种装法：
 
 ```bash
-# 方式一：克隆安装（推荐——之后 upgrade.sh 能直接在仓库目录里升级）
+# 方式一：克隆安装（推荐——之后包出新版时 git pull 就能更新，见使用手册 §6.2）
 git clone https://github.com/ss-zxt/hypit-ollama-kit.git
 cd hypit-ollama-kit && ./install.sh
 
@@ -114,6 +114,20 @@ bash setup-ollama-service.sh  # VM 重启后单独恢复 Ollama 服务
 ```
 
 版本都锁在 `versions.env` 里，升级时改那一个文件即可；来源与校验值见 `SOURCES.md`。
+
+## 这个包本身出新版了怎么办
+
+更新的是包自己的脚本/文档/组件（和下面升官方版本是两回事）。当初用
+`git clone` 装的，在包目录里三行搞定：
+
+```bash
+git pull --ff-only
+./install.sh     # 幂等：已装的跳过，只补新版新增的东西，不动已拉好的模型
+bash verify.sh   # ALL CHECKS PASSED 即更新完成
+```
+
+当初用压缩包装的：下新版压缩包解压覆盖原包目录，再跑同样的
+`./install.sh` + `bash verify.sh`。完整说明见使用手册 §6.2。
 
 ## 官方版本升级了怎么办
 
