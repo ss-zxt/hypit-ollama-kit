@@ -82,7 +82,7 @@ OS_PRETTY="$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- 
 RAM_GB_DETECTED=$(( ( $(awk '/^MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 0) + 524288 ) / 1048576 ))
 info "OS: ${OS_PRETTY:-unknown Linux}, kernel $(uname -r)"
 info "RAM: ${RAM_GB_DETECTED} GB total; systemd: $([ -d /run/systemd/system ] && echo present || echo 'absent (nohup fallback will be used)')"
-for cmd in curl tar python3 node npm npx; do
+for cmd in curl tar python3 node npm npx git; do
   command -v "$cmd" >/dev/null 2>&1 || die "Missing required command: $cmd"
 done
 # Hypit 0.3.1 declares engines node >= 22.15.0 — enforce it up front instead of
