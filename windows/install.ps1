@@ -234,7 +234,22 @@ try {
             Write-Info 'already pulled (skip)'
         } elseif ($cli) {
             & $cli pull $selectedModel | Out-Host
-            if ($LASTEXITCODE -ne 0) { Die "ollama pull $selectedModel failed" }
+            if ($LASTEXITCODE -ne 0) {
+                # Field lesson: on proxied networks Ollama refuses the
+                # registry redirect ("resolves to non-public IP") and the
+                # pull dies even though everything else works. If the
+                # machine already has models, point at the -Model escape
+                # hatch instead of leaving a bare failure.
+                $have = @()
+                try {
+                    $tagResp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/tags" -TimeoutSec 10 -ErrorAction Stop
+                    $have = @($tagResp.models | ForEach-Object { $_.name })
+                } catch { }
+                if ($have.Count -gt 0) {
+                    Die "ollama pull $selectedModel failed. Models already on this machine: $($have -join ', '). Re-run with -Model <one of them> to use an existing model, or fix the network/proxy and retry."
+                }
+                Die "ollama pull $selectedModel failed (check the network/proxy: Ollama blocks registry redirects that resolve to non-public IPs)"
+            }
         } else {
             Write-Info 'no CLI found next to the running API; pulling through the API ...'
             $body = @{ name = $selectedModel; stream = $false } | ConvertTo-Json

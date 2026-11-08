@@ -218,15 +218,18 @@ Deliberate differences from the Linux build:
   official versions; `upgrade.ps1` pulls a new kit version and
   re-applies the installer (see the §6.2/§6.3 distinction).
 
-Field-test status: the scripts have passed a full PowerShell parse
-check and the model-tier boundary self-test (10 cases). A GitHub
-Actions workflow ships in `windows\ci\`; copy it to
-`.github\workflows\` to re-run the parse check, tier self-test and
-installer preflight automatically on windows-latest. The full
-install (multi-GB downloads + real inference) counts as verified
-once it has run end to end on a real Win11 machine; until then treat
-it as "usable, pending real-machine acceptance" and start any
-troubleshooting with `verify.ps1`.
+Field-test status: **verified end to end on a real Win11 machine on
+2026-11-08** (Windows 11 Pro build 26200, 32 GB RAM, no discrete
+GPU; the machine's existing Ollama 0.40.15 and its qwen3-vl:4b-instruct
+model were reused; all 11 verification checks passed, including a
+real inference smoke test). Acceptance testing found and fixed two
+Windows PowerShell 5.1-only traps (cross-file $script: scoping and
+member access inside strings) that PowerShell 7 self-checks cannot
+reproduce - re-verify changes on 5.1 when possible. A GitHub Actions
+workflow ships in `windows\ci\`; copy it to `.github\workflows\` to
+re-run the parse check, tier self-test and installer preflight
+automatically on windows-latest. Start any troubleshooting with
+`verify.ps1`.
 
 ## 4. Using it after installation
 
