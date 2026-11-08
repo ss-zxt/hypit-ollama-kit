@@ -48,11 +48,25 @@ try {
     $videoFile = $null
     if ($Source -match '^https?://') {
         Write-Log 'Downloading reference video'
-        $dl = & (Join-Path $WindowsDir 'tiktok\download-tiktok.ps1') $Source 2>&1 | ForEach-Object { [string]$_ }
-        $dl | ForEach-Object { Write-Host $_ }
-        $line = $dl | Where-Object { $_ -like 'Downloaded: *' } | Select-Object -Last 1
-        if ($line) { $videoFile = $line -replace '^Downloaded: ', '' }
-        if (-not $videoFile -or -not (Test-Path $videoFile)) { Die 'download did not produce a file' }
+        # Do NOT parse the child's console text: download-tiktok.ps1
+        # prints its "Downloaded:" line with Write-Host, which renders
+        # to the host and never enters a captured pipeline (field bug
+        # 2026-11-08: download succeeded, the parse found nothing).
+        # Locate the result by snapshotting the download folder instead.
+        $dlDir = Join-Path $env:USERPROFILE 'Downloads\omniget\tiktok'
+        $before = @{}
+        if (Test-Path $dlDir) {
+            Get-ChildItem $dlDir -File | ForEach-Object { $before[$_.FullName] = $_.LastWriteTimeUtc }
+        }
+        $startUtc = [DateTime]::UtcNow
+        & (Join-Path $WindowsDir 'tiktok\download-tiktok.ps1') $Source | Out-Host
+        $fresh = @(Get-ChildItem $dlDir -File -ErrorAction SilentlyContinue | Where-Object {
+            (-not $before.ContainsKey($_.FullName)) -or ($_.LastWriteTimeUtc -gt $before[$_.FullName])
+        } | Where-Object { $_.LastWriteTimeUtc -ge $startUtc.AddMinutes(-2) } |
+            Sort-Object LastWriteTimeUtc -Descending)
+        if ($fresh.Count -gt 0) { $videoFile = $fresh[0].FullName }
+        if (-not $videoFile -or -not (Test-Path $videoFile)) { Die "download did not produce a new file in $dlDir" }
+        Write-Info "downloaded file: $videoFile"
     } else {
         if (-not (Test-Path $Source)) { Die "file not found: $Source" }
         $videoFile = (Resolve-Path $Source).Path
