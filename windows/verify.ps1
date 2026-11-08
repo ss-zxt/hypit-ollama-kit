@@ -81,13 +81,13 @@ if ($cli) {
 # 7. Ollama API
 $apiVer = Get-OllamaApiVersion
 if ($apiVer) { Ok "ollama API up: $apiVer" }
-else { Bad "ollama API not responding on $paths.OllamaApi (run: .\start-ollama.ps1)" }
+else { Bad "ollama API not responding on $($paths.OllamaApi) (run: .\start-ollama.ps1)" }
 
 # 8. Model present
 $modelOk = $false
 if ($apiVer) {
     try {
-        $tags = Invoke-RestMethod -Uri "$paths.OllamaApi/api/tags" -TimeoutSec 10 -ErrorAction Stop
+        $tags = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/tags" -TimeoutSec 10 -ErrorAction Stop
         $names = @($tags.models | ForEach-Object { $_.name })
         if ($names -contains $Model) { $modelOk = $true }
     } catch { }
@@ -122,7 +122,7 @@ if (-not $NoSmoke -and $script:Fail -eq 0) {
             think   = $false
             options = @{ num_predict = 64 }
         } | ConvertTo-Json
-        $resp = Invoke-RestMethod -Uri "$paths.OllamaApi/api/generate" -Method Post -Body $body `
+        $resp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/generate" -Method Post -Body $body `
             -ContentType 'application/json' -TimeoutSec 300 -ErrorAction Stop
         $line = ([string]$resp.response).Trim() -split "`n" | Select-Object -First 1
         if ($line) { Ok "inference smoke test: $line" } else { Bad 'inference returned an empty response' }

@@ -112,11 +112,11 @@ try {
     Write-Log 'Hypit skill'
     $skillFile = Join-Path $paths.SkillDir 'SKILL.md'
     if ((Test-Path $skillFile) -and -not $Force) {
-        Write-Info "already installed at $paths.SkillDir (skip)"
+        Write-Info "already installed at $($paths.SkillDir) (skip)"
     } else {
         & npx -y skills add hypit-ai/hypit -g -y | Out-Host
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $skillFile)) { Die 'skill install failed' }
-        Write-Info "installed to $paths.SkillDir"
+        Write-Info "installed to $($paths.SkillDir)"
     }
 
     # ------------------------------------------------------------ Hypit CLI
@@ -203,7 +203,7 @@ try {
         Move-Item (Split-Path $exe -Parent) $paths.OllamaDir
         Add-UserPath $paths.OllamaDir
         [void](Start-OllamaServer)
-        Write-Info "installed pinned Ollama $($cfg.OllamaVersion) to $paths.OllamaDir"
+        Write-Info "installed pinned Ollama $($cfg.OllamaVersion) to $($paths.OllamaDir)"
         # Autostart at logon for the kit-managed copy (the official app
         # registers its own; do not add one when reusing an install).
         try {
@@ -228,7 +228,7 @@ try {
     # ------------------------------------------------------------ Model
     if (-not $SkipModel) {
         Write-Log "Model $selectedModel"
-        $tags = Invoke-RestMethod -Uri "$paths.OllamaApi/api/tags" -TimeoutSec 10
+        $tags = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/tags" -TimeoutSec 10
         $names = @($tags.models | ForEach-Object { $_.name })
         if ($names -contains $selectedModel) {
             Write-Info 'already pulled (skip)'
@@ -238,7 +238,7 @@ try {
         } else {
             Write-Info 'no CLI found next to the running API; pulling through the API ...'
             $body = @{ name = $selectedModel; stream = $false } | ConvertTo-Json
-            Invoke-RestMethod -Uri "$paths.OllamaApi/api/pull" -Method Post -Body $body `
+            Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/pull" -Method Post -Body $body `
                 -ContentType 'application/json' -TimeoutSec 3600 | Out-Null
         }
         Save-RecordedModel $selectedModel
@@ -286,7 +286,7 @@ try {
     if ($LASTEXITCODE -ne 0) { Die 'verification failed - see [FAIL] lines above' }
 
     Write-Log 'Done'
-    Write-Info "Hypit: hypit --version | Ollama API: $paths.OllamaApi | Model: $selectedModel"
+    Write-Info "Hypit: hypit --version | Ollama API: $($paths.OllamaApi) | Model: $selectedModel"
     Write-Info 'If this kit helped you, please star the repo: https://github.com/ss-zxt/hypit-ollama-kit'
 } catch {
     Write-Host "`n$($_.Exception.Message)" -ForegroundColor Red

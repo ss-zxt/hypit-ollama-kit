@@ -54,7 +54,7 @@ foreach ($dir in @($paths.HypitPrefix, $paths.FfmpegDir, $paths.OllamaDir, $path
 
 # Hypit skill.
 if (Test-Path $paths.SkillDir) {
-    Write-Info "removing $paths.SkillDir"
+    Write-Info "removing $($paths.SkillDir)"
     Remove-Item $paths.SkillDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
