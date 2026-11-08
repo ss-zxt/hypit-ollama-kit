@@ -99,6 +99,17 @@ restores the service.
   the specs / candidate cut points / volume report plus a frame grid at
   0.5-second intervals, ready for frame-by-frame decomposition.
 
+> **Not TikTok-only**: the fetch engine is yt-dlp, which supports well
+> over a thousand sites — the same command works for YouTube, Bilibili
+> and other links; "TikTok" in the script names is just the primary
+> scenario. Field-tested on a Muse VM (2026-11-05): TikTok is the most
+> reliable; Bilibili works up to 1080p without login (higher quality may
+> need cookies); YouTube is unstable from datacenter proxy IPs (login
+> cookies may be required; workaround: yt-dlp with
+> `--extractor-args "youtube:player_client=android"` gets 360p);
+> Douyin needs cookies imported from a real browser first (not set up).
+
+
 ## What you get after installing
 
 | Component | Location | Notes |

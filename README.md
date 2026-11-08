@@ -76,6 +76,15 @@ README），然后在本目录执行 `git remote add origin <仓库地址>` + `g
   拆解工程（`~/workspace/hypit-projects/<项目名>/`），自动生成规格/切点候选/
   音量报告和每 0.5 秒的帧网格证据图，拿来就能看帧拆解。
 
+> **不止 TikTok**：取片引擎是 yt-dlp，支持上千个站点——同一条命令对
+> YouTube、Bilibili 等站点的链接同样可用，脚本名里的 TikTok 只是主线
+> 场景。实测（Muse VM，2026-11-05）：TikTok 最稳；Bilibili 免登录可下
+> 到 1080p（更高画质可能需要 cookies）；YouTube 走数据中心代理 IP 不稳
+> （可能需要登录 cookies；临时变通：yt-dlp 加
+> `--extractor-args "youtube:player_client=android"` 可下 360p）；
+> 抖音需要先从真实浏览器导入 cookies 才能下（尚未备好）。
+
+
 ## 装完有什么
 
 | 组件 | 位置 | 说明 |

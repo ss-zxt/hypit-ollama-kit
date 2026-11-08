@@ -6,6 +6,17 @@
 不用粘贴到第三方下载站**。2026-11-06 起取代旧的 SaveFrom 浏览器路线
 （旧法保留在文末作兜底）。
 
+## 不止 TikTok（2026-11-08 补充说明）
+
+**不止 TikTok**：取片引擎是 yt-dlp，支持上千个站点——同一条命令对
+YouTube、Bilibili 等站点的链接同样可用，脚本名里的 TikTok 只是主线
+场景。实测（Muse VM，2026-11-05）：TikTok 最稳；Bilibili 免登录可下
+到 1080p（更高画质可能需要 cookies）；YouTube 走数据中心代理 IP 不稳
+（可能需要登录 cookies；临时变通：yt-dlp 加
+`--extractor-args "youtube:player_client=android"` 可下 360p）；
+抖音需要先从真实浏览器导入 cookies 才能下（尚未备好）。
+
+
 ## 工具安装
 
 取片工具已包含在全套安装里：跑 `./install.sh` 时会一并装好

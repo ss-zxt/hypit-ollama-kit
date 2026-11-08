@@ -241,6 +241,17 @@ back, restore the fixed tag and re-run `./install.sh`.
    fails with a misleading "extractor broken" error). Short links
    (vt.tiktok.com) resolve directly. Only if omniget fails twice, fall
    back to the SaveFrom browser method kept at the end of that document.
+   
+   > **Not TikTok-only**: the fetch engine is yt-dlp, which supports well
+   > over a thousand sites — the same command works for YouTube, Bilibili
+   > and other links; "TikTok" in the script names is just the primary
+   > scenario. Field-tested on a Muse VM (2026-11-05): TikTok is the most
+   > reliable; Bilibili works up to 1080p without login (higher quality may
+   > need cookies); YouTube is unstable from datacenter proxy IPs (login
+   > cookies may be required; workaround: yt-dlp with
+   > `--extractor-args "youtube:player_client=android"` gets 360p);
+   > Douyin needs cookies imported from a real browser first (not set up).
+
 2. Archive and extract evidence:
    `bash tiktok/prepare-reference.sh <downloaded file> <english-project-name>`
    → creates, under `~/workspace/hypit-projects/<project-name>/`:
