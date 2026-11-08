@@ -23,11 +23,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path $PSScriptRoot -Parent) 'common.ps1')
+$paths = Get-KitPaths
 
 try {
-    $cli = Join-Path $script:OmnigetDir 'omniget-cli.exe'
+    $cli = Join-Path $paths.OmnigetDir 'omniget-cli.exe'
     if (-not (Test-Path $cli)) { Die 'omniget-cli not found - run install-omniget.ps1 first' }
-    $ytdlp = Join-Path $script:OmnigetDir 'yt-dlp.exe'
+    $ytdlp = Join-Path $paths.OmnigetDir 'yt-dlp.exe'
 
     if (-not $OutputDir) {
         $OutputDir = Join-Path $env:USERPROFILE 'Downloads\omniget\tiktok'
@@ -42,7 +43,7 @@ try {
     $ffprobePath = $null
     $ffprobeCmd = Get-Command 'ffprobe.exe' -ErrorAction SilentlyContinue
     if ($ffprobeCmd) { $ffprobePath = $ffprobeCmd.Source }
-    if (-not $ffprobePath) { $ffprobePath = Find-FirstFile $script:FfmpegDir 'ffprobe.exe' }
+    if (-not $ffprobePath) { $ffprobePath = Find-FirstFile $paths.FfmpegDir 'ffprobe.exe' }
 
     function Find-NewestVideo {
         Get-ChildItem $OutputDir -File -ErrorAction SilentlyContinue |

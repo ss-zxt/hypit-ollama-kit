@@ -13,7 +13,8 @@ param(
 
 $ErrorActionPreference = 'Continue'
 . (Join-Path $PSScriptRoot 'common.ps1')
-$cfg = $script:KitConfig
+$cfg = Get-KitConfig
+$paths = Get-KitPaths
 
 $script:Fail = 0
 function Ok   { param([string]$Text) Write-Host "  [OK]   $Text" }
@@ -26,7 +27,7 @@ if (-not $Model) { $Model = Get-RecordedModel }
 if (-not $Model) { $Model = 'qwen3:1.7b' }
 
 # 1. Hypit CLI
-$hypitCmd = Join-Path $script:HypitPrefix 'hypit.cmd'
+$hypitCmd = Join-Path $paths.HypitPrefix 'hypit.cmd'
 if (-not (Test-Path $hypitCmd)) {
     $cmd = Get-Command 'hypit.cmd' -ErrorAction SilentlyContinue
     if ($cmd) { $hypitCmd = $cmd.Source }
@@ -41,13 +42,13 @@ if (Test-Path $hypitCmd) {
 }
 
 # 2. Hypit skill
-if (Test-Path (Join-Path $script:SkillDir 'SKILL.md')) { Ok 'hypit skill present' } else { Bad 'hypit skill missing' }
+if (Test-Path (Join-Path $paths.SkillDir 'SKILL.md')) { Ok 'hypit skill present' } else { Bad 'hypit skill missing' }
 
 # 3. FFmpeg
 $ffmpegPath = $null
 $ffmpegCmd = Get-Command 'ffmpeg.exe' -ErrorAction SilentlyContinue
 if ($ffmpegCmd) { $ffmpegPath = $ffmpegCmd.Source }
-if (-not $ffmpegPath) { $ffmpegPath = Find-FirstFile $script:FfmpegDir 'ffmpeg.exe' }
+if (-not $ffmpegPath) { $ffmpegPath = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe' }
 if ($ffmpegPath) {
     $line = & $ffmpegPath -version 2>$null | Select-Object -First 1
     $fv = $null
@@ -80,13 +81,13 @@ if ($cli) {
 # 7. Ollama API
 $apiVer = Get-OllamaApiVersion
 if ($apiVer) { Ok "ollama API up: $apiVer" }
-else { Bad "ollama API not responding on $script:OllamaApi (run: .\start-ollama.ps1)" }
+else { Bad "ollama API not responding on $paths.OllamaApi (run: .\start-ollama.ps1)" }
 
 # 8. Model present
 $modelOk = $false
 if ($apiVer) {
     try {
-        $tags = Invoke-RestMethod -Uri "$script:OllamaApi/api/tags" -TimeoutSec 10 -ErrorAction Stop
+        $tags = Invoke-RestMethod -Uri "$paths.OllamaApi/api/tags" -TimeoutSec 10 -ErrorAction Stop
         $names = @($tags.models | ForEach-Object { $_.name })
         if ($names -contains $Model) { $modelOk = $true }
     } catch { }
@@ -94,7 +95,7 @@ if ($apiVer) {
 if ($modelOk) { Ok "model $Model present" } else { Bad "model $Model not in /api/tags (run: ollama pull $Model)" }
 
 # 9. omniget-cli (soft check, like the Linux kit)
-$omniExe = Join-Path $script:OmnigetDir 'omniget-cli.exe'
+$omniExe = Join-Path $paths.OmnigetDir 'omniget-cli.exe'
 if ((Test-Path $omniExe) -and ((& $omniExe --help 2>$null | Select-Object -First 1) -ne $null)) {
     Ok "omniget-cli present (TikTok capture, release $($cfg.OmnigetVersion))"
 } else {
@@ -102,7 +103,7 @@ if ((Test-Path $omniExe) -and ((& $omniExe --help 2>$null | Select-Object -First
 }
 
 # 10. yt-dlp engine (soft check)
-$ytdlpExe = Join-Path $script:OmnigetDir 'yt-dlp.exe'
+$ytdlpExe = Join-Path $paths.OmnigetDir 'yt-dlp.exe'
 if (Test-Path $ytdlpExe) {
     $yv = & $ytdlpExe --version 2>$null | Select-Object -First 1
     if ($yv -eq $cfg.YtdlpVersion) { Ok "yt-dlp $yv (omniget engine)" }
@@ -121,7 +122,7 @@ if (-not $NoSmoke -and $script:Fail -eq 0) {
             think   = $false
             options = @{ num_predict = 64 }
         } | ConvertTo-Json
-        $resp = Invoke-RestMethod -Uri "$script:OllamaApi/api/generate" -Method Post -Body $body `
+        $resp = Invoke-RestMethod -Uri "$paths.OllamaApi/api/generate" -Method Post -Body $body `
             -ContentType 'application/json' -TimeoutSec 300 -ErrorAction Stop
         $line = ([string]$resp.response).Trim() -split "`n" | Select-Object -First 1
         if ($line) { Ok "inference smoke test: $line" } else { Bad 'inference returned an empty response' }

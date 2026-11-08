@@ -19,6 +19,34 @@ $script:OmnigetDir  = Join-Path $script:KitRoot 'tools\omniget'
 $script:SkillDir    = Join-Path $env:USERPROFILE '.agents\skills\hypit'
 $script:OllamaApi   = 'http://127.0.0.1:11434'
 
+# IMPORTANT (field-found on Windows PowerShell 5.1): $script: variables
+# set in this file are NOT reliably visible from the scripts that
+# dot-source it. Consumer scripts must therefore get paths and config
+# through these two functions (function definitions DO cross the
+# dot-source boundary reliably on 5.1 and 7.x). The $script: variables
+# above remain only for this file's own functions below.
+function Get-KitPaths {
+    $localAppData = $env:LOCALAPPDATA
+    if (-not $localAppData) { $localAppData = [Environment]::GetFolderPath('LocalApplicationData') }
+    $root = Join-Path $localAppData 'HypitOllamaKit'
+    return [PSCustomObject]@{
+        Root        = $root
+        BinDir      = Join-Path $root 'bin'
+        StateDir    = Join-Path $root 'state'
+        CacheDir    = Join-Path $root 'downloads'
+        HypitPrefix = Join-Path $root 'hypit-cli'
+        OllamaDir   = Join-Path $root 'ollama'
+        FfmpegDir   = Join-Path $root 'ffmpeg'
+        OmnigetDir  = Join-Path $root 'tools\omniget'
+        SkillDir    = Join-Path $env:USERPROFILE '.agents\skills\hypit'
+        OllamaApi   = 'http://127.0.0.1:11434'
+    }
+}
+
+function Get-KitConfig {
+    return Import-PowerShellDataFile (Join-Path $PSScriptRoot 'versions.psd1')
+}
+
 function Write-Log  { param([string]$Text) Write-Host "`n== $Text ==" }
 function Write-Info { param([string]$Text) Write-Host "  $Text" }
 function Write-Warn { param([string]$Text) Write-Host "  WARNING: $Text" -ForegroundColor Yellow }

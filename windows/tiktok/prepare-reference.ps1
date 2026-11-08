@@ -20,11 +20,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path $PSScriptRoot -Parent) 'common.ps1')
+$paths = Get-KitPaths
 
 try {
     if (-not (Test-Path $VideoFile)) { Die "file not found: $VideoFile" }
 
-    $hypitCmd = Join-Path $script:HypitPrefix 'hypit.cmd'
+    $hypitCmd = Join-Path $paths.HypitPrefix 'hypit.cmd'
     if (-not (Test-Path $hypitCmd)) {
         $cmd = Get-Command 'hypit.cmd' -ErrorAction SilentlyContinue
         if ($cmd) { $hypitCmd = $cmd.Source } else { Die 'hypit CLI not found - run the kit installer first' }
@@ -33,14 +34,14 @@ try {
     $probeCmd = Get-Command 'ffprobe.exe' -ErrorAction SilentlyContinue
     if ($probeCmd) { $ffprobePath = $probeCmd.Source }
     if (-not $ffprobePath) {
-        $ffprobePath = Find-FirstFile $script:FfmpegDir 'ffprobe.exe'
+        $ffprobePath = Find-FirstFile $paths.FfmpegDir 'ffprobe.exe'
         if (-not $ffprobePath) { Die 'ffprobe (FFmpeg) is required' }
     }
     $ffmpegPath = $null
     $ffmpegCmd = Get-Command 'ffmpeg.exe' -ErrorAction SilentlyContinue
     if ($ffmpegCmd) { $ffmpegPath = $ffmpegCmd.Source }
     if (-not $ffmpegPath) {
-        $ffmpegPath = Find-FirstFile $script:FfmpegDir 'ffmpeg.exe'
+        $ffmpegPath = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe'
         if (-not $ffmpegPath) { Die 'ffmpeg is required' }
     }
 

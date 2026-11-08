@@ -38,7 +38,8 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 . (Join-Path $PSScriptRoot 'select-model.ps1')
-$cfg = $script:KitConfig
+$cfg = Get-KitConfig
+$paths = Get-KitPaths
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 
 try {
@@ -109,18 +110,18 @@ try {
 
     # ------------------------------------------------------------ Hypit skill
     Write-Log 'Hypit skill'
-    $skillFile = Join-Path $script:SkillDir 'SKILL.md'
+    $skillFile = Join-Path $paths.SkillDir 'SKILL.md'
     if ((Test-Path $skillFile) -and -not $Force) {
-        Write-Info "already installed at $script:SkillDir (skip)"
+        Write-Info "already installed at $paths.SkillDir (skip)"
     } else {
         & npx -y skills add hypit-ai/hypit -g -y | Out-Host
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $skillFile)) { Die 'skill install failed' }
-        Write-Info "installed to $script:SkillDir"
+        Write-Info "installed to $paths.SkillDir"
     }
 
     # ------------------------------------------------------------ Hypit CLI
     Write-Log "Hypit CLI @hypit/hypit@$($cfg.HypitVersion)"
-    $hypitCmd = Join-Path $script:HypitPrefix 'hypit.cmd'
+    $hypitCmd = Join-Path $paths.HypitPrefix 'hypit.cmd'
     $curHypit = $null
     if (Test-Path $hypitCmd) {
         $v = & $hypitCmd --version 2>$null | Select-Object -Last 1
@@ -129,16 +130,16 @@ try {
     if ($curHypit -eq $cfg.HypitVersion -and -not $Force) {
         Write-Info "already at $curHypit (skip)"
     } else {
-        & npm install --global --prefix $script:HypitPrefix "@hypit/hypit@$($cfg.HypitVersion)" | Out-Host
+        & npm install --global --prefix $paths.HypitPrefix "@hypit/hypit@$($cfg.HypitVersion)" | Out-Host
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path $hypitCmd)) { Die 'npm install of Hypit CLI failed' }
     }
-    Add-UserPath $script:HypitPrefix
+    Add-UserPath $paths.HypitPrefix
     Write-Info "hypit -> $hypitCmd"
 
     # ------------------------------------------------------------ FFmpeg
     Write-Log 'FFmpeg'
     $ffmpegCmd = Get-Command 'ffmpeg.exe' -ErrorAction SilentlyContinue
-    $kitFfmpegExe = Find-FirstFile $script:FfmpegDir 'ffmpeg.exe'
+    $kitFfmpegExe = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe'
     if ($kitFfmpegExe -and -not $Force) {
         Write-Info "kit FFmpeg present: $kitFfmpegExe"
         Add-UserPath (Split-Path $kitFfmpegExe -Parent)
@@ -146,13 +147,13 @@ try {
         Write-Info "existing FFmpeg reused: $($ffmpegCmd.Source)"
     } else {
         $zip = Download-Verified -Url $cfg.FfmpegUrl -FileName $cfg.FfmpegAsset -Sha256 $cfg.FfmpegAssetSha256
-        Expand-ToDir -ZipPath $zip -Dir (Join-Path $script:KitCacheDir 'ffmpeg-extract')
-        $found = Find-FirstFile (Join-Path $script:KitCacheDir 'ffmpeg-extract') 'ffmpeg.exe'
+        Expand-ToDir -ZipPath $zip -Dir (Join-Path $paths.CacheDir 'ffmpeg-extract')
+        $found = Find-FirstFile (Join-Path $paths.CacheDir 'ffmpeg-extract') 'ffmpeg.exe'
         if (-not $found) { Die 'FFmpeg archive did not contain ffmpeg.exe' }
         $binDir = Split-Path $found -Parent
-        if (Test-Path $script:FfmpegDir) { Remove-Item $script:FfmpegDir -Recurse -Force }
-        Move-Item (Split-Path $binDir -Parent) $script:FfmpegDir
-        $kitFfmpegExe = Find-FirstFile $script:FfmpegDir 'ffmpeg.exe'
+        if (Test-Path $paths.FfmpegDir) { Remove-Item $paths.FfmpegDir -Recurse -Force }
+        Move-Item (Split-Path $binDir -Parent) $paths.FfmpegDir
+        $kitFfmpegExe = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe'
         Add-UserPath (Split-Path $kitFfmpegExe -Parent)
         Write-Info "installed: $kitFfmpegExe"
     }
@@ -162,7 +163,7 @@ try {
         Write-Log 'Hypit browsers (capture Chrome + renderer headless shell)'
         & $hypitCmd capture install-browser | Out-Host
         if ($LASTEXITCODE -ne 0) { Die 'hypit capture install-browser failed' }
-        $smokeDir = Join-Path $script:KitStateDir 'smoke-project'
+        $smokeDir = Join-Path $paths.StateDir 'smoke-project'
         if (Test-Path $smokeDir) { Remove-Item $smokeDir -Recurse -Force }
         Copy-Item (Join-Path $RepoRoot 'smoke-project') $smokeDir -Recurse
         Push-Location $smokeDir
@@ -194,15 +195,15 @@ try {
     } else {
         $ollamaSource = 'kit'
         $zip = Download-Verified -Url $cfg.OllamaUrl -FileName $cfg.OllamaAsset -Sha256 $cfg.OllamaAssetSha256
-        $extractDir = Join-Path $script:KitCacheDir 'ollama-extract'
+        $extractDir = Join-Path $paths.CacheDir 'ollama-extract'
         Expand-ToDir -ZipPath $zip -Dir $extractDir
         $exe = Find-FirstFile $extractDir 'ollama.exe'
         if (-not $exe) { Die 'Ollama archive did not contain ollama.exe' }
-        if (Test-Path $script:OllamaDir) { Remove-Item $script:OllamaDir -Recurse -Force }
-        Move-Item (Split-Path $exe -Parent) $script:OllamaDir
-        Add-UserPath $script:OllamaDir
+        if (Test-Path $paths.OllamaDir) { Remove-Item $paths.OllamaDir -Recurse -Force }
+        Move-Item (Split-Path $exe -Parent) $paths.OllamaDir
+        Add-UserPath $paths.OllamaDir
         [void](Start-OllamaServer)
-        Write-Info "installed pinned Ollama $($cfg.OllamaVersion) to $script:OllamaDir"
+        Write-Info "installed pinned Ollama $($cfg.OllamaVersion) to $paths.OllamaDir"
         # Autostart at logon for the kit-managed copy (the official app
         # registers its own; do not add one when reusing an install).
         try {
@@ -210,7 +211,7 @@ try {
             $lnk = Join-Path $startup 'HypitOllamaKit-Ollama.lnk'
             $shell = New-Object -ComObject WScript.Shell
             $shortcut = $shell.CreateShortcut($lnk)
-            $shortcut.TargetPath = Join-Path $script:OllamaDir 'ollama.exe'
+            $shortcut.TargetPath = Join-Path $paths.OllamaDir 'ollama.exe'
             $shortcut.Arguments = 'serve'
             $shortcut.WindowStyle = 7
             $shortcut.Save()
@@ -227,7 +228,7 @@ try {
     # ------------------------------------------------------------ Model
     if (-not $SkipModel) {
         Write-Log "Model $selectedModel"
-        $tags = Invoke-RestMethod -Uri "$script:OllamaApi/api/tags" -TimeoutSec 10
+        $tags = Invoke-RestMethod -Uri "$paths.OllamaApi/api/tags" -TimeoutSec 10
         $names = @($tags.models | ForEach-Object { $_.name })
         if ($names -contains $selectedModel) {
             Write-Info 'already pulled (skip)'
@@ -237,7 +238,7 @@ try {
         } else {
             Write-Info 'no CLI found next to the running API; pulling through the API ...'
             $body = @{ name = $selectedModel; stream = $false } | ConvertTo-Json
-            Invoke-RestMethod -Uri "$script:OllamaApi/api/pull" -Method Post -Body $body `
+            Invoke-RestMethod -Uri "$paths.OllamaApi/api/pull" -Method Post -Body $body `
                 -ContentType 'application/json' -TimeoutSec 3600 | Out-Null
         }
         Save-RecordedModel $selectedModel
@@ -274,7 +275,7 @@ try {
         omniget_version = $cfg.OmnigetVersion
         omniget_state   = $omnigetState
         ytdlp_version   = $cfg.YtdlpVersion
-        kit_root        = $script:KitRoot
+        kit_root        = $paths.Root
     }
     Write-Info "manifest written to $manifest"
 
@@ -285,7 +286,7 @@ try {
     if ($LASTEXITCODE -ne 0) { Die 'verification failed - see [FAIL] lines above' }
 
     Write-Log 'Done'
-    Write-Info "Hypit: hypit --version | Ollama API: $script:OllamaApi | Model: $selectedModel"
+    Write-Info "Hypit: hypit --version | Ollama API: $paths.OllamaApi | Model: $selectedModel"
     Write-Info 'If this kit helped you, please star the repo: https://github.com/ss-zxt/hypit-ollama-kit'
 } catch {
     Write-Host "`n$($_.Exception.Message)" -ForegroundColor Red

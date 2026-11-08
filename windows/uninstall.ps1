@@ -19,7 +19,8 @@ param(
 
 $ErrorActionPreference = 'Continue'
 . (Join-Path $PSScriptRoot 'common.ps1')
-$cfg = $script:KitConfig
+$cfg = Get-KitConfig
+$paths = Get-KitPaths
 
 if (-not $Yes) {
     Write-Host 'This removes the Windows kit components listed at the top of this script.'
@@ -43,8 +44,8 @@ if (Test-Path $lnk) { Remove-Item $lnk -Force }
 
 # Kit-managed directories (record the FFmpeg bin dir first: it is one of
 # the PATH entries to clean up below, and it is about to be deleted).
-$ffBin = Find-FirstFile $script:FfmpegDir 'ffmpeg.exe'
-foreach ($dir in @($script:HypitPrefix, $script:FfmpegDir, $script:OllamaDir, $script:OmnigetDir)) {
+$ffBin = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe'
+foreach ($dir in @($paths.HypitPrefix, $paths.FfmpegDir, $paths.OllamaDir, $paths.OmnigetDir)) {
     if (Test-Path $dir) {
         Write-Info "removing $dir"
         Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue
@@ -52,13 +53,13 @@ foreach ($dir in @($script:HypitPrefix, $script:FfmpegDir, $script:OllamaDir, $s
 }
 
 # Hypit skill.
-if (Test-Path $script:SkillDir) {
-    Write-Info "removing $script:SkillDir"
-    Remove-Item $script:SkillDir -Recurse -Force -ErrorAction SilentlyContinue
+if (Test-Path $paths.SkillDir) {
+    Write-Info "removing $paths.SkillDir"
+    Remove-Item $paths.SkillDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # User PATH entries the installer added.
-$remove = @($script:HypitPrefix, $script:OllamaDir, $script:OmnigetDir)
+$remove = @($paths.HypitPrefix, $paths.OllamaDir, $paths.OmnigetDir)
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 if ($userPath) {
     $kept = $userPath -split ';' | Where-Object {
@@ -68,6 +69,6 @@ if ($userPath) {
 }
 
 # State + manifest last (Get-RecordedModel above already read it).
-if (Test-Path $script:KitStateDir) { Remove-Item $script:KitStateDir -Recurse -Force -ErrorAction SilentlyContinue }
+if (Test-Path $paths.StateDir) { Remove-Item $paths.StateDir -Recurse -Force -ErrorAction SilentlyContinue }
 
 Write-Host 'Uninstall done. Models and any pre-existing Ollama install were kept.'

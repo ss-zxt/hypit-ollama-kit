@@ -19,23 +19,24 @@ param([switch]$Force)
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path $PSScriptRoot -Parent) 'common.ps1')
-$cfg = $script:KitConfig
+$cfg = Get-KitConfig
+$paths = Get-KitPaths
 
 try {
     if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
         Die "unsupported architecture $env:PROCESSOR_ARCHITECTURE (the pinned omniget-cli build is x64)"
     }
-    if (-not (Test-Path $script:OmnigetDir)) {
-        New-Item -ItemType Directory -Path $script:OmnigetDir -Force | Out-Null
+    if (-not (Test-Path $paths.OmnigetDir)) {
+        New-Item -ItemType Directory -Path $paths.OmnigetDir -Force | Out-Null
     }
 
     # ------------------------------------------------------------ omniget-cli
-    $cli = Join-Path $script:OmnigetDir 'omniget-cli.exe'
+    $cli = Join-Path $paths.OmnigetDir 'omniget-cli.exe'
     if ((Test-Path $cli) -and -not $Force) {
         Write-Info "omniget-cli already installed (skip; -Force to reinstall): $cli"
     } else {
         $zip = Download-Verified -Url $cfg.OmnigetUrl -FileName $cfg.OmnigetAsset -Sha256 $cfg.OmnigetAssetSha256
-        $extractDir = Join-Path $script:KitCacheDir 'omniget-extract'
+        $extractDir = Join-Path $paths.CacheDir 'omniget-extract'
         Expand-ToDir -ZipPath $zip -Dir $extractDir
         $found = Find-FirstFile $extractDir 'omniget-cli.exe'
         if (-not $found) { Die 'omniget archive did not contain omniget-cli.exe' }
@@ -48,7 +49,7 @@ try {
     # release version (upstream internal version lag) - harmless.
 
     # ------------------------------------------------------------ yt-dlp engine
-    $ytdlp = Join-Path $script:OmnigetDir 'yt-dlp.exe'
+    $ytdlp = Join-Path $paths.OmnigetDir 'yt-dlp.exe'
     $current = $null
     if (Test-Path $ytdlp) { $current = & $ytdlp --version 2>$null | Select-Object -First 1 }
     if ($current -eq $cfg.YtdlpVersion -and -not $Force) {
@@ -63,7 +64,7 @@ try {
     Copy-Item $ytdlp (Join-Path $appdataBin 'yt-dlp.exe') -Force
     if ((& $ytdlp --version) -ne $cfg.YtdlpVersion) { Die 'yt-dlp version mismatch after install' }
 
-    Add-UserPath $script:OmnigetDir
+    Add-UserPath $paths.OmnigetDir
     Write-Host 'Done. Capture a TikTok reference with:'
     Write-Host "  powershell -ExecutionPolicy Bypass -File `"$PSScriptRoot\download-tiktok.ps1`" `"<TikTok URL>`""
 } catch {

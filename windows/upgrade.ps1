@@ -21,7 +21,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
-$cfg = $script:KitConfig
+$cfg = Get-KitConfig
 
 if ($Check) {
     Write-Log 'Official version check'
