@@ -115,6 +115,7 @@ try {
     $notes += "生成时间: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
     $notes += ""
     $notes += "## 逐拼图笔记"
+    $outFile = Join-Path $projectDir 'DRAFT_NOTES.md'
     $i = 0
     foreach ($grid in $grids) {
         $i++
@@ -125,15 +126,36 @@ try {
             messages = @(@{ role = 'user'; content = $gridPrompt; images = @($b64) })
             stream   = $false
             think    = $false
-            options  = @{ num_ctx = 8192 }
+            options  = @{ num_predict = 900 }
         } | ConvertTo-Json -Depth 6
-        $resp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body `
-            -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
-        $text = [string]$resp.message.content
+        # One slow grid must not kill the run (field bug 2026-11-08:
+        # grid 2 of 3 timed out on a CPU-only machine and everything,
+        # including grid 1's finished note, was lost). Retry once, then
+        # mark the grid as failed and continue; save after every grid.
+        $text = $null
+        for ($attempt = 1; $attempt -le 2 -and -not $text; $attempt++) {
+            try {
+                $resp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body `
+                    -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
+                $text = [string]$resp.message.content
+            } catch {
+                if ($attempt -eq 1) {
+                    Write-Warn "拼图 $i 第一次读取失败 ($($_.Exception.Message)), 等 5 秒重试一次 ..."
+                    Start-Sleep -Seconds 5
+                } else {
+                    Write-Warn "拼图 $i 读取失败, 已跳过: $($_.Exception.Message)"
+                }
+            }
+        }
         $notes += ""
         $notes += "### $($grid.Name)"
-        $notes += $text.Trim()
-        Write-Info "拼图 $i 读完"
+        if ($text) {
+            $notes += $text.Trim()
+            Write-Info "拼图 $i 读完"
+        } else {
+            $notes += "(本张拼图读取失败, 已跳过。)"
+        }
+        $notes | Set-Content -Path $outFile -Encoding UTF8
     }
 
     # Save the per-grid notes FIRST. They are the valuable part; the
@@ -142,8 +164,8 @@ try {
     # never throw the notes away (field bug 2026-11-08: 3 grids read
     # fine, then the merge died with HTTP 400 - the default 4096-token
     # context was too small for all notes at once - and no file was
-    # written at all).
-    $outFile = Join-Path $projectDir 'DRAFT_NOTES.md'
+    # written at all). ($outFile is defined before the grid loop; the
+    # loop already re-saves after every grid.)
     $notes | Set-Content -Path $outFile -Encoding UTF8
     Write-Info "逐拼图笔记已先存好: $outFile"
 
