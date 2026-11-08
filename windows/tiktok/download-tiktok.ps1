@@ -31,7 +31,7 @@ try {
     $ytdlp = Join-Path $paths.OmnigetDir 'yt-dlp.exe'
 
     if (-not $OutputDir) {
-        $OutputDir = Join-Path $env:USERPROFILE 'Downloads\omniget\tiktok'
+        $OutputDir = Get-DownloadsDir
     }
     if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }
 

@@ -53,7 +53,7 @@ try {
         # to the host and never enters a captured pipeline (field bug
         # 2026-11-08: download succeeded, the parse found nothing).
         # Locate the result by snapshotting the download folder instead.
-        $dlDir = Join-Path $env:USERPROFILE 'Downloads\omniget\tiktok'
+        $dlDir = Get-DownloadsDir
         $before = @{}
         if (Test-Path $dlDir) {
             Get-ChildItem $dlDir -File | ForEach-Object { $before[$_.FullName] = $_.LastWriteTimeUtc }
@@ -86,7 +86,7 @@ try {
     # (field bug 2026-11-08).
     if ($LASTEXITCODE -ne 0) { Die 'prepare-reference failed - see the red error line above' }
 
-    $projectDir = Join-Path $env:USERPROFILE "workspace\hypit-projects\$ProjectName"
+    $projectDir = Join-Path (Get-ProjectsRoot) $ProjectName
     $tileDir = Join-Path $projectDir 'evidence\tiles'
     $grids = @(Get-ChildItem $tileDir -File -ErrorAction Stop |
         Where-Object { $_.Extension -in '.png', '.jpg', '.jpeg' } |

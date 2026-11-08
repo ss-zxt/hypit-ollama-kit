@@ -5,7 +5,9 @@
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File .\prepare-reference.ps1 <video-file> <project-name>
 #
-# Creates %USERPROFILE%\workspace\hypit-projects\<project-name>\ with:
+# Creates <projects-root>\<project-name>\ with: (projects root is
+# %USERPROFILE%\workspace\hypit-projects by default, or
+# %HYPIT_DATA_DIR%\projects when that environment variable is set)
 #   references\source.mp4   the original, renamed
 #   references\PROBE.txt    specs + visual-change candidates + audio levels
 #   evidence\tiles\         0.5s time-labeled frame grids (hypit media tiles)
@@ -45,7 +47,7 @@ try {
         if (-not $ffmpegPath) { Die 'ffmpeg is required' }
     }
 
-    $project = Join-Path $env:USERPROFILE "workspace\hypit-projects\$ProjectName"
+    $project = Join-Path (Get-ProjectsRoot) $ProjectName
     $refDir  = Join-Path $project 'references'
     $tileDir = Join-Path $project 'evidence\tiles'
     New-Item -ItemType Directory -Path $refDir -Force | Out-Null

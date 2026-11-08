@@ -218,6 +218,15 @@ Deliberate differences from the Linux build:
   official versions; `upgrade.ps1` pulls a new kit version and
   re-applies the installer (see the §6.2/§6.3 distinction).
 
+Data location: downloads and projects (frame grids and
+DRAFT_NOTES.md included) default to the C: user profile. To put them
+on another drive, run once in PowerShell:
+`[Environment]::SetEnvironmentVariable('HYPIT_DATA_DIR','D:\HypitData','User')`
+(path of your choice), then open new windows: downloads go to
+`D:\HypitData\downloads\tiktok`, projects to
+`D:\HypitData\projects\<name>`. Existing files are not moved
+automatically.
+
 Local assistant (`windows\assistant\video-draft.bat`): give it a
 TikTok URL or a local video file and it downloads, archives, cuts
 0.5s frame grids, feeds the grids one by one to the machine's local

@@ -198,3 +198,29 @@ function Save-RecordedModel {
     Ensure-KitDirs
     $Model | Set-Content -Path (Join-Path $script:KitStateDir 'resolved-model.txt') -Encoding ASCII
 }
+
+# Data location: by default, downloads land in the user profile
+# (Downloads\omniget\tiktok) and decomposition projects in
+# %USERPROFILE%\workspace\hypit-projects - both on the system drive.
+# Set the user environment variable HYPIT_DATA_DIR (e.g. D:\HypitData)
+# to move both onto another drive:
+#   downloads -> <HYPIT_DATA_DIR>\downloads\tiktok
+#   projects  -> <HYPIT_DATA_DIR>\projects\<name>
+# (references, frame tiles and DRAFT_NOTES.md all live in the project
+# folder.) Set it once with:
+#   [Environment]::SetEnvironmentVariable('HYPIT_DATA_DIR','D:\HypitData','User')
+# then open new windows. Existing data is not moved automatically.
+function Get-DataDir {
+    if ($env:HYPIT_DATA_DIR) { return $env:HYPIT_DATA_DIR }
+    return $null
+}
+function Get-DownloadsDir {
+    $d = Get-DataDir
+    if ($d) { return (Join-Path $d 'downloads\tiktok') }
+    return (Join-Path $env:USERPROFILE 'Downloads\omniget\tiktok')
+}
+function Get-ProjectsRoot {
+    $d = Get-DataDir
+    if ($d) { return (Join-Path $d 'projects') }
+    return (Join-Path $env:USERPROFILE 'workspace\hypit-projects')
+}
