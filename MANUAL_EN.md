@@ -23,6 +23,13 @@ machine**:
 | Headless browsers ×2 | Chrome for Testing 153 + Headless Shell 152 | Hypit's web capture and its production rendering pipeline |
 | TikTok capture method | tiktok/ directory | A fixed omniget-cli (command-line) way to fetch reference clips, plus automatic post-download archiving and frame evidence |
 
+**Free edition**: this kit is the **free** toolchain. It only does the
+"break down into prompts" step — structure, notes and generation
+prompts (MD files) from a reference video — and **does not generate
+video itself**. Take the prompts and upload the MD file to another AI
+agent (e.g. Muse) to produce the video; for direct video generation,
+subscribe to Hypit's related services separately.
+
 Design principles (all learned the hard way):
 
 - **Official sources only**: GitHub (hypit-ai/hypit, ollama/ollama), the npm

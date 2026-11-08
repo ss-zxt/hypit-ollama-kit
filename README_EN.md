@@ -6,6 +6,13 @@
 > way to support this kit:
 > [github.com/ss-zxt/hypit-ollama-kit](https://github.com/ss-zxt/hypit-ollama-kit)
 
+> **Free edition**: this kit is the **free** toolchain. It only does the
+> "break down into prompts" step — structure, notes and generation
+> prompts (MD files) from a reference video — and **does not generate
+> video itself**. Take the prompts and upload the MD file to another AI
+> agent (e.g. Muse) to produce the video; for direct video generation,
+> subscribe to Hypit's related services separately.
+
 Take the environment verified on one Muse account and reproduce it, as-is,
 on another: **Hypit (skill + CLI + two headless browsers) + open-source
 Ollama + the Qwen qwen3:1.7b local model** — everything downloaded from
