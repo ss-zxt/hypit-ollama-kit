@@ -49,7 +49,11 @@ try {
     $refDir  = Join-Path $project 'references'
     $tileDir = Join-Path $project 'evidence\tiles'
     New-Item -ItemType Directory -Path $refDir -Force | Out-Null
-    New-Item -ItemType Directory -Path $tileDir -Force | Out-Null
+    # Do NOT pre-create $tileDir: on Windows, hypit media tiles refuses
+    # a destination that already exists (CLI_ERROR "Destination ...
+    # already exists", field finding 2026-11-08; the Linux CLI accepts
+    # it). The tiles step below removes any leftover dir first and lets
+    # hypit create it fresh.
 
     $video = Join-Path $refDir 'source.mp4'
     Copy-Item $VideoFile $video -Force
@@ -81,6 +85,7 @@ try {
     $ErrorActionPreference = $prevEAP
     $probe | Set-Content -Path (Join-Path $refDir 'PROBE.txt') -Encoding UTF8
 
+    if (Test-Path $tileDir) { Remove-Item $tileDir -Recurse -Force }
     & $hypitCmd media tiles $video --start 0 --end $end --every 0.5 --cell 320 --columns 5 --to $tileDir | Out-Host
     if ($LASTEXITCODE -ne 0) { Die 'hypit media tiles failed' }
     $gridCount = @(Get-ChildItem $tileDir -File -ErrorAction SilentlyContinue |
