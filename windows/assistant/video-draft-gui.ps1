@@ -183,6 +183,14 @@ $btnOpenFolder.Anchor = 'Bottom,Left'
 $btnOpenFolder.Enabled = $false
 $form.Controls.Add($btnOpenFolder)
 
+$btnCopyMd = New-Object System.Windows.Forms.Button
+$btnCopyMd.Text = '复制MD文件'
+$btnCopyMd.Location = New-Object System.Drawing.Point(352, 502)
+$btnCopyMd.Size = New-Object System.Drawing.Size(110, 30)
+$btnCopyMd.Anchor = 'Bottom,Left'
+$btnCopyMd.Enabled = $false
+$form.Controls.Add($btnCopyMd)
+
 # ------------------------------------------------------------- state
 $script:worker = $null
 $script:logFile = $null
@@ -238,6 +246,7 @@ $timer.Add_Tick({
             $script:projectDir = Split-Path $script:draftPath -Parent
             $btnOpenDraft.Enabled = $true
             $btnOpenFolder.Enabled = $true
+            $btnCopyMd.Enabled = $true
         }
         if ($code -eq 0) {
             $lblStatus.Text = '完成！初稿已生成，点下面按钮打开。'
@@ -269,6 +278,7 @@ $btnStart.Add_Click({
     $script:projectDir = $null
     $btnOpenDraft.Enabled = $false
     $btnOpenFolder.Enabled = $false
+    $btnCopyMd.Enabled = $false
     $txtLog.Clear()
     Append-Log "开始处理: $src`r`n"
     $lblStatus.Text = '运行中...（下载 → 拆帧 → 逐图读取 → 出初稿）'
@@ -302,6 +312,26 @@ $btnOpenDraft.Add_Click({
 $btnOpenFolder.Add_Click({
     if ($script:projectDir -and (Test-Path $script:projectDir)) {
         Start-Process 'explorer.exe' $script:projectDir
+    }
+})
+
+$btnCopyMd.Add_Click({
+    # Copy the draft BOTH ways in one clipboard payload: pasting
+    # into a chat/text box inserts the full text, pasting into a
+    # folder or file picker drops the .md file itself.
+    if ($script:draftPath -and (Test-Path $script:draftPath)) {
+        try {
+            $content = Get-Content -Path $script:draftPath -Raw -Encoding UTF8
+            $data = New-Object System.Windows.Forms.DataObject
+            $data.SetText($content)
+            $files = New-Object System.Collections.Specialized.StringCollection
+            [void]$files.Add($script:draftPath)
+            $data.SetFileDropList($files)
+            [System.Windows.Forms.Clipboard]::SetDataObject($data, $true)
+            $lblStatus.Text = '已复制：粘贴到聊天框是初稿全文，粘贴到文件夹是 MD 文件本身。'
+        } catch {
+            $lblStatus.Text = "复制失败：$($_.Exception.Message)"
+        }
     }
 })
 
