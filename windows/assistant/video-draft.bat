@@ -14,15 +14,15 @@ rem you set yourself always wins; edit the path below to change it.
 if not defined HYPIT_DATA_DIR if exist D:\ set "HYPIT_DATA_DIR=D:\HypitData"
 set "SRC=%~1"
 if "%SRC%"=="" (
-  echo Paste a TikTok URL, or a local video file path:
+  echo 粘贴 TikTok 链接，或输入本地视频文件的路径：
   set /p SRC="> "
 )
 if "%SRC%"=="" (
-  echo Nothing entered. Exiting.
+  echo 没有输入任何内容，退出。
   pause
   exit /b 1
 )
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0video-draft.ps1" "%SRC%"
 echo.
-echo Assistant finished with exit code %ERRORLEVEL%.
+echo 助手运行结束，退出码：%ERRORLEVEL%
 pause
