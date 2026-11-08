@@ -116,36 +116,70 @@ try {
     $notes += ""
     $notes += "## 逐拼图笔记"
     $outFile = Join-Path $projectDir 'DRAFT_NOTES.md'
+
+    # One vision call. keep_alive stops Ollama unloading the model
+    # between grids (a reload on a CPU-only box wastes minutes).
+    function Read-GridImage {
+        param([string]$ImagePath, [string]$UseModel, [string]$Api, [string]$Prompt, [int]$MaxTokens)
+        $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($ImagePath))
+        $body = @{
+            model      = $UseModel
+            messages   = @(@{ role = 'user'; content = $Prompt; images = @($b64) })
+            stream     = $false
+            think      = $false
+            keep_alive = '30m'
+            options    = @{ num_predict = $MaxTokens }
+        } | ConvertTo-Json -Depth 6
+        $resp = Invoke-RestMethod -Uri "$Api/api/chat" -Method Post -Body $body `
+            -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
+        return [string]$resp.message.content
+    }
+    $ffmpegExe = $null
+    $ffc = Get-Command 'ffmpeg.exe' -ErrorAction SilentlyContinue
+    if ($ffc) { $ffmpegExe = $ffc.Source } else { $ffmpegExe = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe' }
+    $tmpDir = Join-Path ([IO.Path]::GetTempPath()) 'hypit-kit-splits'
+    New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+
     $i = 0
     foreach ($grid in $grids) {
         $i++
         Write-Info "正在读取拼图 $i/$($grids.Count): $($grid.Name) ..."
-        $b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($grid.FullName))
-        $body = @{
-            model    = $Model
-            messages = @(@{ role = 'user'; content = $gridPrompt; images = @($b64) })
-            stream   = $false
-            think    = $false
-            options  = @{ num_predict = 900 }
-        } | ConvertTo-Json -Depth 6
-        # One slow grid must not kill the run (field bug 2026-11-08:
-        # grid 2 of 3 timed out on a CPU-only machine and everything,
-        # including grid 1's finished note, was lost). Retry once, then
-        # mark the grid as failed and continue; save after every grid.
+        # Completion first (field lesson 2026-11-08): a full sheet is
+        # ~1600x3400 px; on a CPU-only machine one sheet can exceed the
+        # 15-minute call timeout. If the full sheet fails, split it
+        # into halves and read those; if a half still fails, downscale
+        # it and try once more. Every rung exists so the grid DOES get
+        # read - a preserved-but-incomplete draft is not the goal.
         $text = $null
-        for ($attempt = 1; $attempt -le 2 -and -not $text; $attempt++) {
-            try {
-                $resp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body `
-                    -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
-                $text = [string]$resp.message.content
-            } catch {
-                if ($attempt -eq 1) {
-                    Write-Warn "拼图 $i 第一次读取失败 ($($_.Exception.Message)), 等 5 秒重试一次 ..."
-                    Start-Sleep -Seconds 5
-                } else {
-                    Write-Warn "拼图 $i 读取失败, 已跳过: $($_.Exception.Message)"
+        try {
+            $text = Read-GridImage $grid.FullName $Model $($paths.OllamaApi) $gridPrompt 900
+        } catch {
+            Write-Warn "拼图 $i 整张读取失败 ($($_.Exception.Message))"
+        }
+        if (-not $text -and $ffmpegExe) {
+            Write-Info "拼图 $i 改为上下两半分开读 ..."
+            $prevEAP = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            $parts = @()
+            $splitOk = $true
+            foreach ($half in @(@{ n = 'a'; y = '0' }, @{ n = 'b'; y = 'in_h/2' })) {
+                $halfPath = Join-Path $tmpDir "$($grid.BaseName)-$($half.n).jpg"
+                & $ffmpegExe -y -v error -i $grid.FullName -vf "crop=in_w:in_h/2:0:$($half.y)" $halfPath 2>$null
+                if (-not (Test-Path $halfPath)) { $splitOk = $false; break }
+                try {
+                    $t = Read-GridImage $halfPath $Model $($paths.OllamaApi) $gridPrompt 600
+                    $parts += "(拼图 $i · 半张 $($half.n))`n$t"
+                } catch {
+                    $smallPath = Join-Path $tmpDir "$($grid.BaseName)-$($half.n)-s.jpg"
+                    & $ffmpegExe -y -v error -i $halfPath -vf 'scale=1024:-2' $smallPath 2>$null
+                    try {
+                        $t = Read-GridImage $smallPath $Model $($paths.OllamaApi) $gridPrompt 600
+                        $parts += "(拼图 $i · 半张 $($half.n), 缩小版)`n$t"
+                    } catch { $splitOk = $false }
                 }
             }
+            $ErrorActionPreference = $prevEAP
+            if ($splitOk -and $parts.Count -eq 2) { $text = ($parts -join "`n") }
         }
         $notes += ""
         $notes += "### $($grid.Name)"
@@ -154,6 +188,7 @@ try {
             Write-Info "拼图 $i 读完"
         } else {
             $notes += "(本张拼图读取失败, 已跳过。)"
+            Write-Warn "拼图 $i 最终没读出来, 已标记跳过"
         }
         $notes | Set-Content -Path $outFile -Encoding UTF8
     }
@@ -176,11 +211,12 @@ try {
         if ($allNotes.Length -gt 12000) { $allNotes = $allNotes.Substring(0, 12000) }
         $mergePrompt = "Below are per-grid timeline notes of a short video, written by a vision model. Merge them into ONE shot-breakdown draft in Chinese: combine consecutive frames into continuous actions in time order, mark likely shot boundaries, and for each segment add one draft sentence that could seed a video-generation prompt. Keep only what the notes support; do not invent new content.`n`n$allNotes"
         $body2 = @{
-            model    = $Model
-            messages = @(@{ role = 'user'; content = $mergePrompt })
-            stream   = $false
-            think    = $false
-            options  = @{ num_predict = 1200; num_ctx = 16384 }
+            model      = $Model
+            messages   = @(@{ role = 'user'; content = $mergePrompt })
+            stream     = $false
+            think      = $false
+            keep_alive = '30m'
+            options    = @{ num_predict = 1200; num_ctx = 16384 }
         } | ConvertTo-Json -Depth 6
         $resp2 = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body2 `
             -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
