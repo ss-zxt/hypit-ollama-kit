@@ -82,7 +82,21 @@ $btnStart.Anchor = 'Top,Right'
 $form.Controls.Add($btnStart)
 
 $lblStatus = New-Object System.Windows.Forms.Label
-$lblStatus.Text = '待开始：粘贴链接后点「开始生成初稿」。读图较慢（纯 CPU），请耐心等。'
+# Hardware note in the status line: name a discrete GPU when one is
+# present (Ollama accelerates the image reads on it), otherwise warn
+# that reads run on CPU and are slow. Detection = the video
+# controller with the most adapter RAM whose name matches a discrete
+# vendor family (integrated Intel/AMD graphics stay "CPU" here -
+# their shared memory reports can be misleadingly large).
+$hwNote = '读图较慢（纯 CPU），请耐心等。'
+try {
+    $discrete = Get-CimInstance Win32_VideoController -ErrorAction Stop |
+        Where-Object { $_.Name -match 'NVIDIA|GeForce|Radeon|Intel.*Arc' } |
+        Sort-Object { [uint64]$_.AdapterRAM } -Descending |
+        Select-Object -First 1
+    if ($discrete) { $hwNote = "已检测到显卡（$($discrete.Name)），读图会快不少。" }
+} catch { }
+$lblStatus.Text = "待开始：粘贴链接后点「开始生成初稿」。$hwNote"
 $lblStatus.Location = New-Object System.Drawing.Point(12, 68)
 $lblStatus.AutoSize = $true
 $form.Controls.Add($lblStatus)
