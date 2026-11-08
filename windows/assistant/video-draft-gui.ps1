@@ -17,6 +17,15 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
+# Used at the end to hide the console window behind the form (the
+# launcher's black window): the form is a separate top-level window
+# and stays visible. Hidden only once the form is fully built, and
+# restored if the form crashes, so early errors are never invisible.
+Add-Type -Name Win32 -Namespace Native -MemberDefinition @'
+[DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();
+[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+'@
+
 $workerScript = Join-Path $PSScriptRoot 'video-draft.ps1'
 
 $form = New-Object System.Windows.Forms.Form
@@ -33,21 +42,21 @@ $form.Controls.Add($lbl)
 
 $txtSource = New-Object System.Windows.Forms.TextBox
 $txtSource.Location = New-Object System.Drawing.Point(12, 36)
-$txtSource.Size = New-Object System.Drawing.Size(600, 24)
+$txtSource.Size = New-Object System.Drawing.Size(556, 24)
 $txtSource.Anchor = 'Top,Left,Right'
 $form.Controls.Add($txtSource)
 
 $btnBrowse = New-Object System.Windows.Forms.Button
 $btnBrowse.Text = '选文件...'
-$btnBrowse.Location = New-Object System.Drawing.Point(620, 34)
+$btnBrowse.Location = New-Object System.Drawing.Point(576, 34)
 $btnBrowse.Size = New-Object System.Drawing.Size(70, 28)
 $btnBrowse.Anchor = 'Top,Right'
 $form.Controls.Add($btnBrowse)
 
 $btnStart = New-Object System.Windows.Forms.Button
 $btnStart.Text = '开始生成初稿'
-$btnStart.Location = New-Object System.Drawing.Point(698, 34)
-$btnStart.Size = New-Object System.Drawing.Size(54, 28)
+$btnStart.Location = New-Object System.Drawing.Point(654, 34)
+$btnStart.Size = New-Object System.Drawing.Size(98, 28)
 $btnStart.Anchor = 'Top,Right'
 $form.Controls.Add($btnStart)
 
@@ -59,8 +68,8 @@ $form.Controls.Add($lblStatus)
 
 $btnStop = New-Object System.Windows.Forms.Button
 $btnStop.Text = '停止'
-$btnStop.Location = New-Object System.Drawing.Point(698, 62)
-$btnStop.Size = New-Object System.Drawing.Size(54, 26)
+$btnStop.Location = New-Object System.Drawing.Point(654, 62)
+$btnStop.Size = New-Object System.Drawing.Size(98, 26)
 $btnStop.Anchor = 'Top,Right'
 $btnStop.Enabled = $false
 $form.Controls.Add($btnStop)
@@ -219,4 +228,11 @@ $form.Add_FormClosing({
     }
 })
 
-[void]$form.ShowDialog()
+$consoleHwnd = [Native.Win32]::GetConsoleWindow()
+if ($consoleHwnd -ne [IntPtr]::Zero) { [void][Native.Win32]::ShowWindow($consoleHwnd, 0) }
+try {
+    [void]$form.ShowDialog()
+} catch {
+    if ($consoleHwnd -ne [IntPtr]::Zero) { [void][Native.Win32]::ShowWindow($consoleHwnd, 5) }
+    throw
+}
