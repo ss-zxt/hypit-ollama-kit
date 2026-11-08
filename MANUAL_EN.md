@@ -44,7 +44,6 @@ upgrade.sh                  Check/apply official upgrades (with backup & rollbac
 setup-ollama-service.sh     (Re)create Ollama's systemd service on its own
 uninstall.sh                Uninstall (requires --yes)
 bootstrap.sh                One-line install from GitHub (after publishing)
-windows/                    The native-Windows PowerShell script set (see §3.4)
 extract_zst.py              Python fallback unpacker when zstd is absent (called internally)
 select-model.sh             Pick a qwen3 size by RAM/VRAM (used by --auto-model)
 versions.env                The single version-pin file (upgrades touch only this)
@@ -117,8 +116,7 @@ this exact machine):
 | Cloud server / physical machine (Ubuntu/Debian x86_64) | ✅ | Normal user + sudo is enough; an NVIDIA GPU is used automatically when present |
 | WSL2 (Ubuntu on Windows) | ⚠️ Installable | No systemd by default → fallback mode (or enable systemd in wsl.conf); not specifically tested |
 | Docker container | ⚠️ Installable | No systemd → fallback mode; Hypit's render pipeline passes --no-sandbox itself; not specifically tested |
-| Native Windows (Win10/11 x64) | ✅ | Use the PowerShell installer (windows\install.ps1, see §3.4); the model is auto-selected for the machine, and an existing Windows Ollama install is detected and reused |
-| Native macOS | ❌ | Would need a separate branch |
+| macOS / native Windows | ❌ | The kit pins the Linux Ollama package and the systemd route; would need separate branches |
 | ARM64 (Raspberry Pi, ARM cloud hosts, etc.) | ❌ | Pinned assets are amd64; official arm64 packages exist but are not adapted here |
 
 **Hardware requirements**:
@@ -172,90 +170,6 @@ cd hypit-ollama-kit && ./install.sh
 
 Interrupted mid-install? Just re-run `./install.sh` — it resumes from
 whatever is missing.
-
-### 3.4 Native Windows install (Win10/11 x64)
-
-The `windows/` directory mirrors the Linux kit in PowerShell (works in
-Windows PowerShell 5.1 and PowerShell 7). Everything installs into the
-current user's profile; no admin rights are needed:
-
-```powershell
-cd hypit-ollama-kit\windows
-powershell -ExecutionPolicy Bypass -File .\install.ps1            # full install
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -CheckOnly # environment report only
-powershell -ExecutionPolicy Bypass -File .\verify.ps1             # standalone verify (11 checks)
-```
-
-Script map: `install.ps1 / verify.ps1 / upgrade.ps1 / uninstall.ps1 /
-start-ollama.ps1 / select-model.ps1` correspond to the Linux .sh files;
-`windows\tiktok\` holds the capture trio; versions and checksums are
-pinned in `windows\versions.psd1` (asset list in SOURCES.md).
-
-Deliberate differences from the Linux build:
-
-- **The model is auto-selected by default** (personal computers are not
-  pinned to 1.7b): the installer detects RAM and discrete-GPU VRAM and
-  applies the same tiers as §4.1 to pick 4b/8b/14b, falling back to
-  1.7b only under 8 GB RAM. The choice is recorded and followed by
-  verify/reinstalls. Force one with `-Model qwen3:8b`.
-- **Ollama reuses an existing install first**: the API
-  (127.0.0.1:11434) and the known Windows install locations are probed
-  and used as-is (a version differing from the pin is noted, never
-  force-replaced). Only when none exists does it download the official
-  standalone 0.40.14 (SHA-256 verified) into
-  `%LOCALAPPDATA%\HypitOllamaKit\ollama` and register logon autostart.
-- FFmpeg likewise: reuse a system one, else install the Gyan 8.1.2
-  essentials build (SHA-256 verified); a missing Node.js is installed
-  via winget when available.
-- Everything lives under `%LOCALAPPDATA%\HypitOllamaKit\` (state,
-  manifest, tools); its directories are added to the user PATH (new
-  terminals pick it up).
-- Capture: `windows\tiktok\download-tiktok.ps1 "<URL>"` - omniget-cli
-  is the official Windows build and the engine is `yt-dlp.exe`; the
-  flow matches §5, and after two omniget failures the script falls
-  back to yt-dlp.exe directly and says so in its output.
-- Upgrades follow the §6 split: `upgrade.ps1 -Check` only reports
-  official versions; `upgrade.ps1` pulls a new kit version and
-  re-applies the installer (see the §6.2/§6.3 distinction).
-
-Data location: downloads and projects (frame grids and
-DRAFT_NOTES.md included) default to the C: user profile. To put them
-on another drive, run once in PowerShell:
-`[Environment]::SetEnvironmentVariable('HYPIT_DATA_DIR','D:\HypitData','User')`
-(path of your choice), then open new windows: downloads go to
-`D:\HypitData\downloads\tiktok`, projects to
-`D:\HypitData\projects\<name>`. Existing files are not moved
-automatically.
-
-GUI version (`windows\assistant\video-draft-gui.bat`): double-click
-opens a window - paste a URL (or pick a local file), click Start,
-watch the live log, then open DRAFT_NOTES.md or the project folder
-from the window. It drives the same command-line pipeline below, so
-both entry points behave identically.
-
-Local assistant (`windows\assistant\video-draft.bat`): give it a
-TikTok URL or a local video file and it downloads, archives, cuts
-0.5s frame grids, feeds the grids one by one to the machine's local
-**vision model** (e.g. qwen3-vl:4b-instruct; text-only models cannot
-see frames), and merges the readings into a shot-breakdown draft in
-the project's `DRAFT_NOTES.md`. It is a **draft** tool: small local
-models miss details and sometimes misread actions, so final prompt
-packs are still finished by a stronger model or a human, per the
-kit's standing division of labor. Double-click the .bat and paste a
-URL, or drag a video file onto it.
-
-Field-test status: **verified end to end on a real Win11 machine on
-2026-11-08** (Windows 11 Pro build 26200, 32 GB RAM, no discrete
-GPU; the machine's existing Ollama 0.40.15 and its qwen3-vl:4b-instruct
-model were reused; all 11 verification checks passed, including a
-real inference smoke test). Acceptance testing found and fixed two
-Windows PowerShell 5.1-only traps (cross-file $script: scoping and
-member access inside strings) that PowerShell 7 self-checks cannot
-reproduce - re-verify changes on 5.1 when possible. A GitHub Actions
-workflow ships in `windows\ci\`; copy it to `.github\workflows\` to
-re-run the parse check, tier self-test and installer preflight
-automatically on windows-latest. Start any troubleshooting with
-`verify.ps1`.
 
 ## 4. Using it after installation
 
