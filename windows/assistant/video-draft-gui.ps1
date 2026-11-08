@@ -28,6 +28,27 @@ Add-Type -Name Win32 -Namespace Native -MemberDefinition @'
 
 $workerScript = Join-Path $PSScriptRoot 'video-draft.ps1'
 
+# Self-repairing root shortcut: a .lnk's icon only resolves from an
+# ABSOLUTE icon path, so the shortcut shipped in the zip (relative
+# paths, so it can launch from anywhere) shows a generic white icon.
+# On every GUI start, rewrite the kit-root shortcut with this
+# machine's real absolute paths - after the first launch it carries
+# the proper icon, and it heals itself if the kit folder is moved
+# (launch once via the .bat after a move).
+try {
+    $kitRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+    $icoPath = Join-Path $kitRoot 'HypitAssistant.ico'
+    if (Test-Path $icoPath) {
+        $wsh = New-Object -ComObject WScript.Shell
+        $sc = $wsh.CreateShortcut((Join-Path $kitRoot 'Hypit本地助手.lnk'))
+        $sc.TargetPath = Join-Path $PSScriptRoot 'video-draft-gui.bat'
+        $sc.WorkingDirectory = $PSScriptRoot
+        $sc.IconLocation = "$icoPath,0"
+        $sc.Description = 'Hypit 本地助手 - 视频拆解初稿'
+        $sc.Save()
+    }
+} catch { }
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Hypit 本地助手 - 视频拆解初稿'
 $form.Size = New-Object System.Drawing.Size(780, 580)
