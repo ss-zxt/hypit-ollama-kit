@@ -15,8 +15,9 @@
 ## 环境要求（摘要，完整版见使用手册 §3.1）
 
 - **操作系统**：Linux x86_64（glibc），实测基准 Ubuntu 24.04.5 LTS（Muse 虚拟机，
-  4 vCPU / 7.7 GB 内存）；Ubuntu 22.04、Debian 12 预期可用；Mac / Windows 原生 /
-  ARM64 不支持，WSL2 可装（兜底模式）。
+  4 vCPU / 7.7 GB 内存）；Ubuntu 22.04、Debian 12 预期可用。**Windows 原生
+  （Win10/11 x64）有专门的 PowerShell 安装器**（见下方「Windows 原生安装」）；
+  Mac / ARM64 仍不支持，WSL2 也可装 Linux 版（兜底模式）。
 - **硬门槛**：Node.js ≥ 22.15.0（Hypit 自身要求，脚本预检拦截）、Python 3 ≥ 3.10、
   家目录可用空间 ≥ 8 GB、内存 ≥ 4 GB（推荐 8 GB 起）。
 - systemd 有则注册服务、无则自动兜底启动；GPU 可选（有 N 卡自动用显存）。
@@ -31,6 +32,24 @@ tar -xzf hypit-ollama-replication-kit.tar.gz
 cd hypit-ollama-replication-kit
 ./install.sh
 ```
+
+## Windows 原生安装（Win10/11 x64）
+
+```powershell
+git clone https://github.com/ss-zxt/hypit-ollama-kit.git
+cd hypit-ollama-kit\windows
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+与 Linux 版的区别（都是有意为之）：
+
+- **模型默认按电脑配置自动选**：个人电脑不锁 1.7b——内存/显存够就装
+  4b/8b/14b（分档见使用手册 §3.4），也可以 `.\install.ps1 -Model qwen3:8b` 指定；
+- **已装的 Windows 版 Ollama 会被检测并复用**，不重复安装；没有时才装
+  官方独立版（固定 0.40.14，SHA-256 校验）；
+- 全部装进当前用户目录、免管理员；Node.js 缺失时会尝试用 winget 补装；
+- 验证/卸载/升级对应 `verify.ps1` / `uninstall.ps1` / `upgrade.ps1`，
+  取片脚本在 `windows\tiktok\`，完整说明见使用手册 §3.4。
 
 ## 作为 GitHub 项目使用（仓库发布后）
 

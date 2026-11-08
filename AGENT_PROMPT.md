@@ -14,3 +14,5 @@ Node ≥ 22.15.0，不满足先把 install.sh --check-only 的环境报告发我
 调 qwen3 时记得带 think:false。
 以后官方版本有更新时，先跑 ./upgrade.sh --check 看一眼，再跑 ./upgrade.sh 升级并把验证结果汇报给我，不要自己改版本号。如果是这个包本身发了新版（脚本/文档/组件更新），那是另一回事：git clone 装的就在包目录 git pull --ff-only 后重跑 ./install.sh 并跑 bash verify.sh 把结果汇报给我；压缩包装的就换新版压缩包覆盖后同样重跑（详见使用手册 §6.2）。
 另外：遇到 TikTok 参考链接时，按包里 tiktok/TIKTOK_METHOD.md 的固定方法取片：取片工具 omniget-cli 已随 ./install.sh 一起装好（万一缺失，先跑一次 bash tiktok/install-omniget.sh 补装），再用 bash tiktok/download-tiktok.sh "<链接>" 下载（Muse VM 上必须带代理，脚本已处理好），下好后用 tiktok/prepare-reference.sh 归档出帧证据，再看完拆解，不要换其他下载路子。
+
+（Windows 版说明：如果目标环境是 Windows 10/11 x64 原生系统，不要跑上面的 Linux 步骤，改走包里 windows/ 目录：在 PowerShell 里运行 windows\install.ps1（模型会按这台电脑的内存/显存自动选档，默认不装 1.7b；机器上已有的 Windows 版 Ollama 会被复用），装完运行 windows\verify.ps1 并把结果完整汇报给我。细节见使用手册 §3.4。）

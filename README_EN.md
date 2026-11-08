@@ -20,8 +20,9 @@ official sources, versions pinned, and the Ollama package SHA-256-verified.
 
 - **OS**: Linux x86_64 (glibc). Tested baseline: Ubuntu 24.04.5 LTS (Muse
   VM, 4 vCPU / 7.7 GB RAM). Ubuntu 22.04 and Debian 12 are expected to work.
-  Native macOS / Windows and ARM64 are not supported; WSL2 can install in
-  fallback mode.
+  **Native Windows (Win10/11 x64) has its own PowerShell installer** (see
+  "Native Windows install" below); native macOS and ARM64 are still not
+  supported, and WSL2 can install the Linux build in fallback mode.
 - **Hard floors**: Node.js ≥ 22.15.0 (Hypit's own requirement; the
   preflight stops without it), Python 3 ≥ 3.10, ≥ 8 GB free under $HOME,
   RAM ≥ 4 GB (8 GB+ recommended).
@@ -40,6 +41,29 @@ tar -xzf hypit-ollama-replication-kit.tar.gz
 cd hypit-ollama-replication-kit
 ./install.sh
 ```
+
+## Native Windows install (Win10/11 x64)
+
+```powershell
+git clone https://github.com/ss-zxt/hypit-ollama-kit.git
+cd hypit-ollama-kit\windows
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+Deliberate differences from the Linux build:
+
+- **The model is auto-selected for the machine by default**: personal
+  computers are not pinned to 1.7b - with enough RAM/VRAM the installer
+  pulls 4b/8b/14b (tiers in Manual §3.4), or force one with
+  `.\install.ps1 -Model qwen3:8b`;
+- **An existing Windows Ollama install is detected and reused**, never
+  duplicated; the pinned standalone build (0.40.14, SHA-256 verified)
+  is installed only when none exists;
+- Everything lands in the current user's profile, no admin needed; a
+  missing Node.js is installed via winget when available;
+- Verify / uninstall / upgrade are `verify.ps1` / `uninstall.ps1` /
+  `upgrade.ps1`; the capture scripts live in `windows\tiktok\`. Full
+  details in Manual §3.4.
 
 ## Using it as a GitHub project (after publishing)
 
