@@ -218,6 +218,17 @@ Deliberate differences from the Linux build:
   official versions; `upgrade.ps1` pulls a new kit version and
   re-applies the installer (see the §6.2/§6.3 distinction).
 
+Local assistant (`windows\assistant\video-draft.bat`): give it a
+TikTok URL or a local video file and it downloads, archives, cuts
+0.5s frame grids, feeds the grids one by one to the machine's local
+**vision model** (e.g. qwen3-vl:4b-instruct; text-only models cannot
+see frames), and merges the readings into a shot-breakdown draft in
+the project's `DRAFT_NOTES.md`. It is a **draft** tool: small local
+models miss details and sometimes misread actions, so final prompt
+packs are still finished by a stronger model or a human, per the
+kit's standing division of labor. Double-click the .bat and paste a
+URL, or drag a video file onto it.
+
 Field-test status: **verified end to end on a real Win11 machine on
 2026-11-08** (Windows 11 Pro build 26200, 32 GB RAM, no discrete
 GPU; the machine's existing Ollama 0.40.15 and its qwen3-vl:4b-instruct
