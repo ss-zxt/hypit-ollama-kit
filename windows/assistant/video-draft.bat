@@ -1,9 +1,11 @@
 @echo off
-chcp 65001 >nul
 rem Local assistant launcher: give it a TikTok URL or a video file
-rem (drag a video file onto this .bat, or double-click and paste a URL).
-rem It downloads (for URLs), cuts frame grids, lets the local vision
-rem model read them, and writes DRAFT_NOTES.md into the project folder.
+rem (drag a video file onto this .bat, or double-click and let the
+rem PowerShell script ask for the URL - the prompt lives in the .ps1
+rem on purpose: cmd.exe misparses batch files containing non-ASCII
+rem text (it resumed mid-word and executed comment text as commands,
+rem field failure 2026-11-08), so this file stays pure ASCII and the
+rem UTF-8-BOM .ps1 shows the Chinese UI instead.
 setlocal
 rem Data location for this run (downloads + projects): default to
 rem D:\HypitData when a D: drive exists, so the double-click flow does
@@ -12,17 +14,7 @@ rem propagated to Explorer (a running Explorer serves stale env to
 rem double-clicked .bat files - field finding 2026-11-08). An env var
 rem you set yourself always wins; edit the path below to change it.
 if not defined HYPIT_DATA_DIR if exist D:\ set "HYPIT_DATA_DIR=D:\HypitData"
-set "SRC=%~1"
-if "%SRC%"=="" (
-  echo 粘贴 TikTok 链接，或输入本地视频文件的路径：
-  set /p SRC="> "
-)
-if "%SRC%"=="" (
-  echo 没有输入任何内容，退出。
-  pause
-  exit /b 1
-)
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0video-draft.ps1" "%SRC%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0video-draft.ps1" %*
 echo.
-echo 助手运行结束，退出码：%ERRORLEVEL%
+echo Assistant finished with exit code %ERRORLEVEL%.
 pause

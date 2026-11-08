@@ -20,7 +20,7 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Mandatory = $false, Position = 0)]
     [string]$Source,
     [string]$ProjectName,
     [string]$Model,
@@ -33,6 +33,17 @@ $WindowsDir = Split-Path $PSScriptRoot -Parent
 $paths = Get-KitPaths
 
 try {
+    # Chinese UI: render this script's output as UTF-8 (the launcher
+    # stays pure ASCII - cmd.exe misparses non-ASCII batch files - so
+    # the prompt lives here, in the UTF-8-BOM script).
+    try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
+    if (-not $Source) {
+        Write-Host '粘贴 TikTok 链接, 或输入本地视频文件的路径 (也可以把视频文件拖到 video-draft.bat 上):'
+        $Source = Read-Host '>'
+        if (-not $Source) { Die '没有输入任何内容, 退出。' }
+        $Source = $Source.Trim().Trim('"')
+    }
+
     # Model: explicit > recorded by the installer > VL default.
     if (-not $Model) { $Model = Get-RecordedModel }
     if (-not $Model) { $Model = 'qwen3-vl:4b-instruct' }
