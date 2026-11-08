@@ -227,6 +227,12 @@ on another drive, run once in PowerShell:
 `D:\HypitData\projects\<name>`. Existing files are not moved
 automatically.
 
+GUI version (`windows\assistant\video-draft-gui.bat`): double-click
+opens a window - paste a URL (or pick a local file), click Start,
+watch the live log, then open DRAFT_NOTES.md or the project folder
+from the window. It drives the same command-line pipeline below, so
+both entry points behave identically.
+
 Local assistant (`windows\assistant\video-draft.bat`): give it a
 TikTok URL or a local video file and it downloads, archives, cuts
 0.5s frame grids, feeds the grids one by one to the machine's local
