@@ -300,6 +300,14 @@ try {
     & powershell.exe @verifyArgs | Out-Host
     if ($LASTEXITCODE -ne 0) { Die 'verification failed - see [FAIL] lines above' }
 
+    # Root shortcut for the assistant GUI (generated on this machine:
+    # a working .lnk cannot be shipped in the zip - see
+    # assistant\create-shortcut.ps1). Non-fatal if it fails.
+    $shortcutScript = Join-Path $PSScriptRoot 'assistant\create-shortcut.ps1'
+    if (Test-Path $shortcutScript) {
+        try { & $shortcutScript | Out-Host } catch { Write-Warn "shortcut creation skipped: $($_.Exception.Message)" }
+    }
+
     Write-Log 'Done'
     Write-Info "Hypit: hypit --version | Ollama API: $($paths.OllamaApi) | Model: $selectedModel"
     Write-Info 'If this kit helped you, please star the repo: https://github.com/ss-zxt/hypit-ollama-kit'
