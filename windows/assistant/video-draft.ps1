@@ -114,6 +114,7 @@ try {
             messages = @(@{ role = 'user'; content = $gridPrompt; images = @($b64) })
             stream   = $false
             think    = $false
+            options  = @{ num_ctx = 8192 }
         } | ConvertTo-Json -Depth 6
         $resp = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body `
             -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
@@ -124,27 +125,46 @@ try {
         Write-Info "拼图 $i 读完"
     }
 
-    # ------------------------------------------------------------ 4. merged breakdown draft
-    Write-Log '汇总成拆解初稿'
-    $allNotes = ($notes -join "`n")
-    $mergePrompt = "Below are per-grid timeline notes of a short video, written by a vision model. Merge them into ONE shot-breakdown draft in Chinese: combine consecutive frames into continuous actions in time order, mark likely shot boundaries, and for each segment add one draft sentence that could seed a video-generation prompt. Keep only what the notes support; do not invent new content.`n`n$allNotes"
-    $body2 = @{
-        model    = $Model
-        messages = @(@{ role = 'user'; content = $mergePrompt })
-        stream   = $false
-        think    = $false
-        options  = @{ num_predict = 1200 }
-    } | ConvertTo-Json -Depth 6
-    $resp2 = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body2 `
-        -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
-    $notes += ""
-    $notes += "## 汇总拆解草案"
-    $notes += ""
-    $notes += ([string]$resp2.message.content).Trim()
-
-    # ------------------------------------------------------------ 5. save
+    # Save the per-grid notes FIRST. They are the valuable part; the
+    # merge below is a convenience extra (and, per QC experience, the
+    # part a human/stronger model redoes anyway). A merge failure must
+    # never throw the notes away (field bug 2026-11-08: 3 grids read
+    # fine, then the merge died with HTTP 400 - the default 4096-token
+    # context was too small for all notes at once - and no file was
+    # written at all).
     $outFile = Join-Path $projectDir 'DRAFT_NOTES.md'
     $notes | Set-Content -Path $outFile -Encoding UTF8
+    Write-Info "逐拼图笔记已先存好: $outFile"
+
+    # ------------------------------------------------------------ 4. merged breakdown draft
+    Write-Log '汇总成拆解初稿'
+    try {
+        $allNotes = ($notes -join "`n")
+        if ($allNotes.Length -gt 12000) { $allNotes = $allNotes.Substring(0, 12000) }
+        $mergePrompt = "Below are per-grid timeline notes of a short video, written by a vision model. Merge them into ONE shot-breakdown draft in Chinese: combine consecutive frames into continuous actions in time order, mark likely shot boundaries, and for each segment add one draft sentence that could seed a video-generation prompt. Keep only what the notes support; do not invent new content.`n`n$allNotes"
+        $body2 = @{
+            model    = $Model
+            messages = @(@{ role = 'user'; content = $mergePrompt })
+            stream   = $false
+            think    = $false
+            options  = @{ num_predict = 1200; num_ctx = 16384 }
+        } | ConvertTo-Json -Depth 6
+        $resp2 = Invoke-RestMethod -Uri "$($paths.OllamaApi)/api/chat" -Method Post -Body $body2 `
+            -ContentType 'application/json' -TimeoutSec 900 -ErrorAction Stop
+        $notes += ""
+        $notes += "## 汇总拆解草案"
+        $notes += ""
+        $notes += ([string]$resp2.message.content).Trim()
+    } catch {
+        Write-Warn "自动汇总失败 ($($_.Exception.Message)) —— 逐拼图笔记已完整保留在文件里, 不影响使用。"
+        $notes += ""
+        $notes += "## 汇总拆解草案"
+        $notes += ""
+        $notes += "(自动汇总失败, 逐拼图笔记已完整保留在上方, 可直接使用。)"
+    }
+    $notes | Set-Content -Path $outFile -Encoding UTF8
+
+    # ------------------------------------------------------------ 5. done
     Write-Log '完成'
     Write-Host "初稿已写入: $outFile"
     Write-Host '这是本地模型的第一版初稿 —— 把它发给你的主 AI 或人工, 在初稿上整理成定稿提示词包。'
