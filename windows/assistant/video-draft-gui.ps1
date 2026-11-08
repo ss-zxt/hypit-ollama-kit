@@ -26,6 +26,53 @@ Add-Type -Name Win32 -Namespace Native -MemberDefinition @'
 [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 '@
 
+# Taskbar identity: a window hosted by powershell.exe inherits
+# PowerShell's AppUserModelID, so the taskbar groups it under
+# PowerShell and shows PowerShell's icon even when the form has its
+# own icon (field evidence 2026-11-08). Giving the window its OWN
+# AppUserModelID makes the taskbar treat it as a separate app and
+# use the form's icon. Applied in the Shown handler below.
+try {
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class AppId
+{
+    [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IPropertyStore
+    {
+        [PreserveSig] int GetCount(out uint cProps);
+        [PreserveSig] int GetAt(uint iProp, out PropertyKey pkey);
+        [PreserveSig] int GetValue(ref PropertyKey key, out PropVariant pv);
+        [PreserveSig] int SetValue(ref PropertyKey key, ref PropVariant propvar);
+        [PreserveSig] int Commit();
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PropertyKey { public Guid fmtid; public uint pid; }
+    [StructLayout(LayoutKind.Explicit)]
+    private struct PropVariant
+    {
+        [FieldOffset(0)] public ushort VarType;
+        [FieldOffset(8)] public IntPtr Value;
+    }
+    [DllImport("shell32.dll")]
+    private static extern int SHGetPropertyStoreForWindow(IntPtr hwnd, ref Guid iid, out IPropertyStore store);
+    [DllImport("ole32.dll")]
+    private static extern int PropVariantClear(ref PropVariant pvar);
+    public static void Set(IntPtr hwnd, string appId)
+    {
+        Guid iid = new Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99");
+        IPropertyStore store;
+        if (SHGetPropertyStoreForWindow(hwnd, ref iid, out store) != 0) return;
+        PropertyKey key = new PropertyKey { fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), pid = 5 };
+        PropVariant pv = new PropVariant { VarType = 31, Value = Marshal.StringToCoTaskMemUni(appId) };
+        try { store.SetValue(ref key, ref pv); store.Commit(); }
+        finally { PropVariantClear(ref pv); Marshal.ReleaseComObject(store); }
+    }
+}
+'@
+} catch { }
+
 $workerScript = Join-Path $PSScriptRoot 'video-draft.ps1'
 
 # Refresh the kit-root shortcut on every start (single writer:
@@ -256,6 +303,10 @@ $btnOpenFolder.Add_Click({
     if ($script:projectDir -and (Test-Path $script:projectDir)) {
         Start-Process 'explorer.exe' $script:projectDir
     }
+})
+
+$form.Add_Shown({
+    try { [AppId]::Set($form.Handle, 'Hypit.LocalAssistant') } catch { }
 })
 
 $form.Add_FormClosing({
