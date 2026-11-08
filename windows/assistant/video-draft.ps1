@@ -81,6 +81,10 @@ try {
     # ------------------------------------------------------------ 2. archive + frame grids
     Write-Log 'Preparing reference project (archive + frame grids)'
     & (Join-Path $WindowsDir 'tiktok\prepare-reference.ps1') $videoFile $ProjectName | Out-Host
+    # The child has its own try/catch + exit; check it, or a child
+    # failure surfaces later as a misleading "no frame grids" error
+    # (field bug 2026-11-08).
+    if ($LASTEXITCODE -ne 0) { Die 'prepare-reference failed - see the red error line above' }
 
     $projectDir = Join-Path $env:USERPROFILE "workspace\hypit-projects\$ProjectName"
     $tileDir = Join-Path $projectDir 'evidence\tiles'

@@ -57,6 +57,15 @@ try {
     $duration = & $ffprobePath -v error -show_entries format=duration -of csv=p=0 $video
     $end = [math]::Max(0.1, [double]$duration - 0.1)
 
+    # Native stderr trap (field bug 2026-11-08): under
+    # $ErrorActionPreference='Stop', the FIRST line a native tool writes
+    # to stderr - e.g. ffmpeg's version banner during volumedetect -
+    # becomes a terminating NativeCommandError and kills the script
+    # before the tiles step. Captures that merge stderr therefore run
+    # with the preference relaxed, and their results are checked
+    # explicitly instead.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     $probe = @()
     $probe += 'file: references/source.mp4'
     $probe += "downloaded_from: $VideoFile"
@@ -69,10 +78,14 @@ try {
     $vol = & $ffmpegPath -i $video -vn -af volumedetect -f null - 2>&1 | ForEach-Object { [string]$_ } |
         Where-Object { $_ -match 'mean_volume|max_volume' }
     $probe += $vol
+    $ErrorActionPreference = $prevEAP
     $probe | Set-Content -Path (Join-Path $refDir 'PROBE.txt') -Encoding UTF8
 
     & $hypitCmd media tiles $video --start 0 --end $end --every 0.5 --cell 320 --columns 5 --to $tileDir | Out-Host
     if ($LASTEXITCODE -ne 0) { Die 'hypit media tiles failed' }
+    $gridCount = @(Get-ChildItem $tileDir -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Extension -in '.png', '.jpg', '.jpeg' }).Count
+    if ($gridCount -eq 0) { Die 'hypit media tiles produced no frame grids' }
 
     Write-Host "Project ready: $project"
     Write-Host "  references\source.mp4  ($duration s)"
