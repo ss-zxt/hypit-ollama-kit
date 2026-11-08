@@ -28,32 +28,33 @@ Add-Type -Name Win32 -Namespace Native -MemberDefinition @'
 
 $workerScript = Join-Path $PSScriptRoot 'video-draft.ps1'
 
-# Self-repairing root shortcut: a .lnk's icon only resolves from an
-# ABSOLUTE icon path, so the shortcut shipped in the zip (relative
-# paths, so it can launch from anywhere) shows a generic white icon.
-# On every GUI start, rewrite the kit-root shortcut with this
-# machine's real absolute paths - after the first launch it carries
-# the proper icon, and it heals itself if the kit folder is moved
-# (launch once via the .bat after a move).
+# Refresh the kit-root shortcut on every start (single writer:
+# create-shortcut.ps1). It points at launch-gui.vbs via wscript, so
+# launching from the shortcut never opens a console window either,
+# and it heals itself if the kit folder is moved (launch once via
+# video-draft-gui.bat after a move).
 try {
-    $kitRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-    $icoPath = Join-Path $kitRoot 'HypitAssistant.ico'
-    if (Test-Path $icoPath) {
-        $wsh = New-Object -ComObject WScript.Shell
-        $sc = $wsh.CreateShortcut((Join-Path $kitRoot 'Hypit本地助手.lnk'))
-        $sc.TargetPath = Join-Path $PSScriptRoot 'video-draft-gui.bat'
-        $sc.WorkingDirectory = $PSScriptRoot
-        $sc.IconLocation = "$icoPath,0"
-        $sc.Description = 'Hypit 本地助手 - 视频拆解初稿'
-        $sc.Save()
-    }
+    $createShortcut = Join-Path $PSScriptRoot 'create-shortcut.ps1'
+    if (Test-Path $createShortcut) { & $createShortcut | Out-Null }
 } catch { }
+
+# Data-location default, same rule as the launchers: D:\HypitData
+# when a D: drive exists and the variable is not already set. The
+# worker inherits this process environment.
+if (-not $env:HYPIT_DATA_DIR -and (Test-Path 'D:\')) { $env:HYPIT_DATA_DIR = 'D:\HypitData' }
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Hypit 本地助手 - 视频拆解初稿'
 $form.Size = New-Object System.Drawing.Size(780, 580)
 $form.StartPosition = 'CenterScreen'
 $form.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9)
+# The window's own icon (title bar AND taskbar button): the kit
+# icon, instead of the generic PowerShell / WinForms default.
+try {
+    $kitRootForIcon = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+    $iconFile = Join-Path $kitRootForIcon 'HypitAssistant.ico'
+    if (Test-Path $iconFile) { $form.Icon = New-Object System.Drawing.Icon($iconFile) }
+} catch { }
 
 $lbl = New-Object System.Windows.Forms.Label
 $lbl.Text = 'TikTok 链接，或本地视频文件：'
@@ -268,6 +269,9 @@ if ($consoleHwnd -ne [IntPtr]::Zero) { [void][Native.Win32]::ShowWindow($console
 try {
     [void]$form.ShowDialog()
 } catch {
+    # Launched via wscript there is no console to print to - surface
+    # the error as a dialog instead of dying silently. (When a
+    # console does exist, e.g. a hand-run .ps1, restore it too.)
     if ($consoleHwnd -ne [IntPtr]::Zero) { [void][Native.Win32]::ShowWindow($consoleHwnd, 5) }
-    throw
+    [System.Windows.Forms.MessageBox]::Show("界面出错：$($_.Exception.Message)", 'Hypit 本地助手') | Out-Null
 }

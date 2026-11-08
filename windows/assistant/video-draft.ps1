@@ -32,6 +32,13 @@ $WindowsDir = Split-Path $PSScriptRoot -Parent
 . (Join-Path $WindowsDir 'common.ps1')
 $paths = Get-KitPaths
 
+# Data-location default, entry-point independent: D:\HypitData when
+# a D: drive exists and HYPIT_DATA_DIR is not already set (the .bat
+# launchers set it too; the GUI's wscript launcher sets it in its
+# own process env). Keeps downloads/projects off the system drive
+# no matter how this script was started.
+if (-not $env:HYPIT_DATA_DIR -and (Test-Path 'D:\')) { $env:HYPIT_DATA_DIR = 'D:\HypitData' }
+
 try {
     # Chinese UI: render this script's output as UTF-8 (the launcher
     # stays pure ASCII - cmd.exe misparses non-ASCII batch files - so
