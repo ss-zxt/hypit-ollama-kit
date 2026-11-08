@@ -218,12 +218,15 @@ Deliberate differences from the Linux build:
   official versions; `upgrade.ps1` pulls a new kit version and
   re-applies the installer (see the §6.2/§6.3 distinction).
 
-Field-test status: the repo's GitHub Actions runs syntax checks, the
-model-tier self-test and the installer preflight on windows-latest.
-The full install (multi-GB downloads + real inference) counts as
-verified once it has run end to end on a real Win11 machine; until
-then treat it as "usable, pending real-machine acceptance" and start
-any troubleshooting with `verify.ps1`.
+Field-test status: the scripts have passed a full PowerShell parse
+check and the model-tier boundary self-test (10 cases). A GitHub
+Actions workflow ships in `windows\ci\`; copy it to
+`.github\workflows\` to re-run the parse check, tier self-test and
+installer preflight automatically on windows-latest. The full
+install (multi-GB downloads + real inference) counts as verified
+once it has run end to end on a real Win11 machine; until then treat
+it as "usable, pending real-machine acceptance" and start any
+troubleshooting with `verify.ps1`.
 
 ## 4. Using it after installation
 

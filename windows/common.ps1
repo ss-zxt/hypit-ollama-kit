@@ -4,7 +4,11 @@
 
 $script:KitConfig = Import-PowerShellDataFile (Join-Path $PSScriptRoot 'versions.psd1')
 
-$script:KitRoot     = Join-Path $env:LOCALAPPDATA 'HypitOllamaKit'
+$script:LocalAppData = $env:LOCALAPPDATA
+if (-not $script:LocalAppData) {
+    $script:LocalAppData = [Environment]::GetFolderPath('LocalApplicationData')
+}
+$script:KitRoot     = Join-Path $script:LocalAppData 'HypitOllamaKit'
 $script:KitBinDir   = Join-Path $script:KitRoot 'bin'
 $script:KitStateDir = Join-Path $script:KitRoot 'state'
 $script:KitCacheDir = Join-Path $script:KitRoot 'downloads'
@@ -103,7 +107,7 @@ function Find-FirstFile {
 function Get-OllamaCliPath {
     $candidates = @(
         (Join-Path $script:OllamaDir 'ollama.exe'),
-        (Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe')
+        (Join-Path $script:LocalAppData 'Programs\Ollama\ollama.exe')
     )
     $cmd = Get-Command 'ollama.exe' -ErrorAction SilentlyContinue
     if ($cmd) { $candidates += $cmd.Source }
