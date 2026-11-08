@@ -1,4 +1,4 @@
-# prepare-reference.ps1 - archive a downloaded TikTok reference video
+﻿# prepare-reference.ps1 - archive a downloaded TikTok reference video
 # into a standard decomposition project and generate the frame
 # evidence. The Windows counterpart of tiktok/prepare-reference.sh.
 #
@@ -25,26 +25,26 @@ $ErrorActionPreference = 'Stop'
 $paths = Get-KitPaths
 
 try {
-    if (-not (Test-Path $VideoFile)) { Die "file not found: $VideoFile" }
+    if (-not (Test-Path $VideoFile)) { Die "找不到文件: $VideoFile" }
 
     $hypitCmd = Join-Path $paths.HypitPrefix 'hypit.cmd'
     if (-not (Test-Path $hypitCmd)) {
         $cmd = Get-Command 'hypit.cmd' -ErrorAction SilentlyContinue
-        if ($cmd) { $hypitCmd = $cmd.Source } else { Die 'hypit CLI not found - run the kit installer first' }
+        if ($cmd) { $hypitCmd = $cmd.Source } else { Die '找不到 Hypit CLI —— 请先运行这个包的安装程序' }
     }
     $ffprobePath = $null
     $probeCmd = Get-Command 'ffprobe.exe' -ErrorAction SilentlyContinue
     if ($probeCmd) { $ffprobePath = $probeCmd.Source }
     if (-not $ffprobePath) {
         $ffprobePath = Find-FirstFile $paths.FfmpegDir 'ffprobe.exe'
-        if (-not $ffprobePath) { Die 'ffprobe (FFmpeg) is required' }
+        if (-not $ffprobePath) { Die '需要 ffprobe (FFmpeg)' }
     }
     $ffmpegPath = $null
     $ffmpegCmd = Get-Command 'ffmpeg.exe' -ErrorAction SilentlyContinue
     if ($ffmpegCmd) { $ffmpegPath = $ffmpegCmd.Source }
     if (-not $ffmpegPath) {
         $ffmpegPath = Find-FirstFile $paths.FfmpegDir 'ffmpeg.exe'
-        if (-not $ffmpegPath) { Die 'ffmpeg is required' }
+        if (-not $ffmpegPath) { Die '需要 ffmpeg' }
     }
 
     $project = Join-Path (Get-ProjectsRoot) $ProjectName
@@ -89,16 +89,16 @@ try {
 
     if (Test-Path $tileDir) { Remove-Item $tileDir -Recurse -Force }
     & $hypitCmd media tiles $video --start 0 --end $end --every 0.5 --cell 320 --columns 5 --to $tileDir | Out-Host
-    if ($LASTEXITCODE -ne 0) { Die 'hypit media tiles failed' }
+    if ($LASTEXITCODE -ne 0) { Die 'hypit media tiles 拆帧失败' }
     $gridCount = @(Get-ChildItem $tileDir -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Extension -in '.png', '.jpg', '.jpeg' }).Count
-    if ($gridCount -eq 0) { Die 'hypit media tiles produced no frame grids' }
+    if ($gridCount -eq 0) { Die 'hypit 拆完没有生成拼图' }
 
-    Write-Host "Project ready: $project"
-    Write-Host "  references\source.mp4  ($duration s)"
+    Write-Host "项目已就绪: $project"
+    Write-Host "  references\source.mp4  ($duration 秒)"
     Write-Host '  references\PROBE.txt'
-    Write-Host '  evidence\tiles\ (0.5s grids)'
-    Write-Host 'Next: watch the tiles in full, then write references\TIMELINE.md + ANALYSIS.md.'
+    Write-Host '  evidence\tiles\ (0.5 秒拼图)'
+    Write-Host '下一步: 看完拼图后写 references\TIMELINE.md + ANALYSIS.md。'
 } catch {
     Write-Host "`n$($_.Exception.Message)" -ForegroundColor Red
     exit 1

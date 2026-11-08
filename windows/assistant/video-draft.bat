@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 rem Local assistant launcher: give it a TikTok URL or a video file
 rem (drag a video file onto this .bat, or double-click and paste a URL).
 rem It downloads (for URLs), cuts frame grids, lets the local vision

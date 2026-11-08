@@ -1,4 +1,4 @@
-# common.ps1 - shared helpers for the Windows kit scripts.
+﻿# common.ps1 - shared helpers for the Windows kit scripts.
 # Dot-source this file; do not run it directly. Windows PowerShell 5.1
 # and PowerShell 7 compatible; ASCII only.
 
@@ -49,8 +49,8 @@ function Get-KitConfig {
 
 function Write-Log  { param([string]$Text) Write-Host "`n== $Text ==" }
 function Write-Info { param([string]$Text) Write-Host "  $Text" }
-function Write-Warn { param([string]$Text) Write-Host "  WARNING: $Text" -ForegroundColor Yellow }
-function Die        { param([string]$Text) throw "ERROR: $Text" }
+function Write-Warn { param([string]$Text) Write-Host "  注意: $Text" -ForegroundColor Yellow }
+function Die        { param([string]$Text) throw "错误: $Text" }
 
 function Ensure-KitDirs {
     foreach ($d in @($script:KitRoot, $script:KitBinDir, $script:KitStateDir, $script:KitCacheDir)) {

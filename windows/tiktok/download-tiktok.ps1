@@ -1,4 +1,4 @@
-# download-tiktok.ps1 - one command downloads one TikTok video on
+﻿# download-tiktok.ps1 - one command downloads one TikTok video on
 # Windows: info first (title / formats), then the download via
 # omniget-cli, then an ffprobe verification of the landed file.
 # The Windows counterpart of tiktok/download-tiktok.sh.
@@ -27,7 +27,7 @@ $paths = Get-KitPaths
 
 try {
     $cli = Join-Path $paths.OmnigetDir 'omniget-cli.exe'
-    if (-not (Test-Path $cli)) { Die 'omniget-cli not found - run install-omniget.ps1 first' }
+    if (-not (Test-Path $cli)) { Die '找不到 omniget-cli —— 请先运行 install-omniget.ps1' }
     $ytdlp = Join-Path $paths.OmnigetDir 'yt-dlp.exe'
 
     if (-not $OutputDir) {
@@ -55,39 +55,39 @@ try {
     $beforeTime = $null
     if ($before) { $beforeTime = $before.LastWriteTime }
 
-    Write-Host '--- info ---'
+    Write-Host '--- 信息 ---'
     & $cli info $Url @proxyArgs | Out-Host
 
-    Write-Host '--- download ---'
+    Write-Host '--- 下载 ---'
     $ok = $false
     for ($attempt = 1; $attempt -le 2 -and -not $ok; $attempt++) {
         & $cli download $Url -o $OutputDir @proxyArgs | Out-Host
         $ok = ($LASTEXITCODE -eq 0)
-        if (-not $ok -and $attempt -eq 1) { Write-Warn 'download failed once; retrying the same command ...' }
+        if (-not $ok -and $attempt -eq 1) { Write-Warn '第一次下载失败, 用同样的命令重试一次 ...' }
     }
 
     $file = Find-NewestVideo
     if ((-not $ok) -or (-not $file) -or ($beforeTime -and $file.LastWriteTime -le $beforeTime)) {
         if (Test-Path $ytdlp) {
-            Write-Warn 'omniget-cli did not produce a file; falling back to the pinned yt-dlp.exe directly ...'
+            Write-Warn 'omniget-cli 没下到文件, 改用内置的 yt-dlp.exe 直接下载 ...'
             & $ytdlp -o (Join-Path $OutputDir 'tiktok_%(uploader_id)s_%(id)s.%(ext)s') $Url | Out-Host
-            if ($LASTEXITCODE -ne 0) { Die 'download failed with both omniget-cli and yt-dlp.exe' }
+            if ($LASTEXITCODE -ne 0) { Die 'omniget-cli 和 yt-dlp.exe 两个引擎都下载失败' }
             $file = Find-NewestVideo
         } else {
-            Die 'download failed and no yt-dlp.exe fallback is installed'
+            Die '下载失败, 而且没有 yt-dlp.exe 兜底'
         }
     }
-    if (-not $file) { Die 'download produced no video file' }
+    if (-not $file) { Die '下载没有产生视频文件' }
 
-    Write-Host '--- verify ---'
+    Write-Host '--- 校验 ---'
     if ($ffprobePath) {
         & $ffprobePath -v error -show_entries stream=codec_name,width,height -show_entries format=duration `
             -of default=noprint_wrappers=1 $file.FullName | Out-Host
     } else {
-        Write-Warn 'ffprobe not found; skipped the probe (install FFmpeg via the kit installer)'
+        Write-Warn '没找到 ffprobe, 跳过校验 (用安装包把 FFmpeg 装好)'
     }
-    Write-Host "Downloaded: $($file.FullName)"
-    Write-Host 'Next (archive + frame evidence):'
+    Write-Host "已下载: $($file.FullName)"
+    Write-Host '下一步 (归档 + 帧证据):'
     Write-Host "  powershell -ExecutionPolicy Bypass -File `"$PSScriptRoot\prepare-reference.ps1`" `"$($file.FullName)`" <english-project-name>"
 } catch {
     Write-Host "`n$($_.Exception.Message)" -ForegroundColor Red
