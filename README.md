@@ -41,6 +41,10 @@ cd hypit-ollama-kit\windows
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
+不想敲命令也可以：下载仓库 ZIP 解压后，进 `windows` 文件夹**双击
+`install.bat`**（效果相同，装完窗口会停住让你看结果；复验双击
+`verify.bat`）。
+
 与 Linux 版的区别（都是有意为之）：
 
 - **模型默认按电脑配置自动选**：个人电脑不锁 1.7b——内存/显存够就装

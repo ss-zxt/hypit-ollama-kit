@@ -50,6 +50,11 @@ cd hypit-ollama-kit\windows
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
+Prefer not to type commands? Download the repo ZIP, extract it, open
+the `windows` folder and **double-click `install.bat`** (same result;
+the window stays open so you can read the outcome - `verify.bat`
+re-runs the checks).
+
 Deliberate differences from the Linux build:
 
 - **The model is auto-selected for the machine by default**: personal
