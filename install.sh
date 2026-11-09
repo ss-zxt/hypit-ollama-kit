@@ -174,7 +174,7 @@ else
   ARCHIVE_PATH="$OLLAMA_DIST/ollama-linux-amd64-v${OLLAMA_VERSION}.tar.zst"
   if [ ! -f "$ARCHIVE_PATH" ]; then
     info "downloading $OLLAMA_BASE_URL/$OLLAMA_ARCHIVE (~1.5 GB)"
-    curl -fL --retry 3 --retry-delay 2 -C - -o "$ARCHIVE_PATH" "$OLLAMA_BASE_URL/$OLLAMA_ARCHIVE"
+    curl -fL --retry 6 --retry-delay 3 -C - -o "$ARCHIVE_PATH" "$OLLAMA_BASE_URL/$OLLAMA_ARCHIVE"
   fi
   # Verify against the official release checksum file (fall back to pinned hash).
   EXPECTED="$OLLAMA_ARCHIVE_SHA256"
